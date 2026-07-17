@@ -1,10 +1,11 @@
 """Always-on crypto signal job with back-learning - GitHub Actions (free).
 
 Trains XGBoost per coin x timeframe, predicts newest closed candle, alerts
-Telegram on STRONG calls with color emoji. Back-learn: permanent log.csv,
-walk-forward backtest priors, pooled fact-based reliability (all scored
-calls counted once, backtest and live alike), weekly report card, auto-mute
-of weak signal types. Nothing trades.
+Telegram on STRONG calls. Back-learn: permanent log.csv, walk-forward
+backtest, pooled fact-based reliability (all scored calls counted once),
+weekly report card, auto-mute of weak signal types, and adaptive
+selectivity: signal types with weak records must clear a higher conviction
+bar before alerting. Nothing trades.
 """
 import csv
 import json
@@ -31,6 +32,9 @@ BT_FILE = "backtest.json"
 STRONG_HI, HI, LO, STRONG_LO = 0.66, 0.58, 0.42, 0.34
 MUTE_MIN_CALLS = 20
 MUTE_BELOW = 0.48
+SELECTIVE_N = 30       # if a signal type has >= this many scored calls...
+SELECTIVE_BELOW = 0.50 # ...and reliability below this...
+SELECTIVE_EXTRA = 0.04 # ...require this much extra conviction to alert
 BT_PER_RUN = 6
 BT_REFRESH_DAYS = 30
 
@@ -305,11 +309,21 @@ def main():
                 print(f"{key}: {call} p={p:.3f} @ ${pxs}")
 
                 if strong:
+                    weak = (rn >= SELECTIVE_N and rate is not None
+                            and rate < SELECTIVE_BELOW)
+                    extra = SELECTIVE_EXTRA if weak else 0.0
+                    confident = (p >= STRONG_HI + extra
+                                 or p <= STRONG_LO - extra)
                     muted = (rn >= MUTE_MIN_CALLS and rate is not None
                              and rate < MUTE_BELOW)
                     if muted:
                         print(f"{key}: STRONG alert muted "
                               f"({rate*100:.0f}% of {rn})")
+                    elif not confident:
+                        print(f"{key}: STRONG alert skipped, weak record "
+                              f"({rate*100:.0f}% of {rn}) needs "
+                              f"p beyond {STRONG_HI+extra:.2f}/"
+                              f"{STRONG_LO-extra:.2f}")
                     else:
                         rec = (f"\n{health_dot(rate)} Reliability: "
                                f"{rate*100:.0f}% of {rn} calls"
