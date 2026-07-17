@@ -1,11 +1,12 @@
 """Always-on crypto signal job with back-learning - GitHub Actions (free).
 
 Trains XGBoost per coin x timeframe with Platt-calibrated probabilities,
-predicts newest closed candle, alerts Telegram on STRONG calls. Regime
-filter withholds fast-timeframe alerts in choppy markets. Back-learn:
-permanent log.csv, calibrated walk-forward backtest, pooled fact-based
-reliability, weekly report card, auto-mute and adaptive selectivity for
-weak signal types. Nothing trades.
+predicts newest closed candle, alerts Telegram on STRONG calls. Thresholds
+tuned for more directional calls: BUY/SELL at 55/45, STRONG at 62/38.
+Regime filter withholds fast-timeframe STRONG alerts in choppy markets.
+Back-learn: permanent log.csv, calibrated walk-forward backtest, pooled
+fact-based reliability, weekly report card, auto-mute and adaptive
+selectivity for weak signal types. Nothing trades.
 """
 import csv
 import json
@@ -31,13 +32,13 @@ SIGNALS_FILE = "signals.json"
 LOG_FILE = "log.csv"
 BT_FILE = "backtest.json"
 
-STRONG_HI, HI, LO, STRONG_LO = 0.66, 0.58, 0.42, 0.34
+STRONG_HI, HI, LO, STRONG_LO = 0.62, 0.55, 0.45, 0.38
 MUTE_MIN_CALLS = 20
 MUTE_BELOW = 0.48
 SELECTIVE_N = 30
 SELECTIVE_BELOW = 0.50
 SELECTIVE_EXTRA = 0.04
-CHOP_TREND = 0.0025      # |1h ema12/ema48 - 1| below this = choppy market
+CHOP_TREND = 0.0025
 BT_PER_RUN = 6
 BT_REFRESH_DAYS = 30
 
@@ -74,7 +75,6 @@ def depth_imbalance(sym):
 
 
 def regime_choppy(sym):
-    """True when the 1h trend is flat (dead chop) for this coin."""
     try:
         k = klines(sym, "1h", 200)
         c = pd.Series([float(x[4]) for x in k])
@@ -136,8 +136,6 @@ def logodds(p):
 
 
 def train_calibrated(dd, feats):
-    """Train on the first 85%, fit a Platt corrector on the held-out 15%.
-    Returns (model, calibrator or None)."""
     y = dd["target"].astype(int)
     n = len(dd)
     cut = int(n * 0.85)
@@ -161,7 +159,6 @@ def cal_p(model, cal, X):
 
 
 def backtest_key(d, feats):
-    """Walk-forward replay with the same calibration as live."""
     dd = d[d["target"].notna()].reset_index(drop=True)
     n = len(dd)
     if n < 240:
@@ -233,7 +230,6 @@ def live_record(log, key, strong_only=True, window=50):
 
 
 def reliability(log, bt, key):
-    """All scored calls pooled equally, backtest and live alike."""
     lr, ln = live_record(log, key)
     b = bt.get(key)
     bh, bn = (b["strong"] if b else [0, 0])
@@ -277,7 +273,11 @@ def main():
     try:
         sigdata = json.load(open(SIGNALS_FILE))
     except Exception:
-        sigdata = {"latest": {}, "history": []}
+        sigdata = {}
+    if not isinstance(sigdata, dict):
+        sigdata = {}
+    sigdata.setdefault("latest", {})
+    sigdata.setdefault("history", [])
     try:
         bt = json.load(open(BT_FILE))
     except Exception:
