@@ -1,12 +1,12 @@
 """Always-on crypto signal job with back-learning - GitHub Actions (free).
 
 Trains XGBoost per coin x timeframe with Platt-calibrated probabilities,
-predicts newest closed candle, alerts Telegram on STRONG calls. Thresholds
-tuned for more directional calls: BUY/SELL at 55/45, STRONG at 62/38.
+predicts newest closed candle, alerts Telegram on STRONG calls. Thresholds:
+BUY/SELL at 55/45, STRONG at 62/38. Reliability = pooled hit rate of ALL
+scored directional calls (live + walk-forward backtest, each counted once).
 Regime filter withholds fast-timeframe STRONG alerts in choppy markets.
-Back-learn: permanent log.csv, calibrated walk-forward backtest, pooled
-fact-based reliability, weekly report card, auto-mute and adaptive
-selectivity for weak signal types. Nothing trades.
+Permanent log.csv, weekly report card, auto-mute and adaptive selectivity
+for weak signal types. Nothing trades.
 """
 import csv
 import json
@@ -219,7 +219,7 @@ def load_log():
                                      "p", "price", "next_price", "result"])
 
 
-def live_record(log, key, strong_only=True, window=50):
+def live_record(log, key, strong_only=False, window=200):
     x = log[(log["key"] == key) & (log["result"].isin(["hit", "miss"]))]
     if strong_only:
         x = x[x["strong"] == 1]
@@ -230,9 +230,11 @@ def live_record(log, key, strong_only=True, window=50):
 
 
 def reliability(log, bt, key):
+    """All scored DIRECTIONAL calls pooled equally, backtest and live
+    alike, regular and strong alike. rate = total hits / total calls."""
     lr, ln = live_record(log, key)
     b = bt.get(key)
-    bh, bn = (b["strong"] if b else [0, 0])
+    bh, bn = (b["all"] if b else [0, 0])
     lh = (lr * ln) if lr is not None else 0
     n = ln + bn
     if n == 0:
@@ -304,8 +306,8 @@ def main():
                     if res:
                         bt[key] = res
                         bt_budget -= 1
-                        print(f"{key}: backtest strong "
-                              f"{res['strong'][0]}/{res['strong'][1]}, "
+                        print(f"{key}: backtest all "
+                              f"{res['all'][0]}/{res['all'][1]}, "
                               f"acc {res['acc']:.3f}")
 
                 train = d[d["target"].notna()]
