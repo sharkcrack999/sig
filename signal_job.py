@@ -116,4 +116,217 @@ def backtest_key(d, feats):
     n = len(dd)
     if n < 240:
         return None
-    start
+    start = max(int(n * 0.5), 120)
+    step = 150
+    allh = alln = sth = stn = okdir = tot = 0
+    i = start
+    while i < n:
+        j = min(i + step, n)
+        m = make_model()
+        m.fit(dd[feats].iloc[:i], dd["target"].iloc[:i].astype(int))
+        probs = m.predict_proba(dd[feats].iloc[i:j])[:, 1]
+        acts = dd["target"].iloc[i:j].values
+        for p, a in zip(probs, acts):
+            tot += 1
+            okdir += 1 if ((p > 0.5) == (a == 1)) else 0
+            call, dirn, strong = label(float(p))
+            if dirn != 0:
+                hit = (dirn == 1) == (a == 1)
+                alln += 1; allh += 1 if hit else 0
+                if strong:
+                    stn += 1; sth += 1 if hit else 0
+        i = j
+    return {"all": [allh, alln], "strong": [sth, stn],
+            "acc": round(okdir / max(tot, 1), 4),
+            "at": int(datetime.now(timezone.utc).timestamp() * 1000)}
+
+
+def tg(text):
+    tok, chat = os.environ.get("TG_TOKEN"), os.environ.get("TG_CHAT_ID")
+    if not tok or not chat:
+        print("telegram env vars missing; would send:\n" + text)
+        return
+    requests.post(f"https://api.telegram.org/bot{tok}/sendMessage",
+                  json={"chat_id": chat, "text": text}, timeout=15)
+
+
+def log_append(row):
+    new = not os.path.exists(LOG_FILE)
+    with open(LOG_FILE, "a", newline="") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["t", "key", "call", "dir", "strong", "p",
+                        "price", "next_price", "result"])
+        w.writerow(row)
+
+
+def load_log():
+    try:
+        return pd.read_csv(LOG_FILE)
+    except Exception:
+        return pd.DataFrame(columns=["t", "key", "call", "dir", "strong",
+                                     "p", "price", "next_price", "result"])
+
+
+def live_record(log, key, strong_only=True, window=50):
+    x = log[(log["key"] == key) & (log["result"].isin(["hit", "miss"]))]
+    if strong_only:
+        x = x[x["strong"] == 1]
+    x = x.tail(window)
+    if not len(x):
+        return None, 0
+    return (x["result"] == "hit").mean(), len(x)
+
+
+def reliability(log, bt, key):
+    """All scored calls pooled equally, backtest and live alike.
+    rate = total hits / total calls."""
+    lr, ln = live_record(log, key)
+    b = bt.get(key)
+    bh, bn = (b["strong"] if b else [0, 0])
+    lh = (lr * ln) if lr is not None else 0
+    n = ln + bn
+    if n == 0:
+        return None, 0
+    return (lh + bh) / n, n
+
+
+def weekly_report(log, state):
+    week = datetime.now(timezone.utc).strftime("%G-W%V")
+    if state.get("_report_week") == week:
+        return
+    state["_report_week"] = week
+    scored = log[log["result"].isin(["hit", "miss"])]
+    if len(scored) < 10:
+        return
+    cutoff = (datetime.now(timezone.utc).timestamp() - 7 * 86400) * 1000
+    wk = scored[scored["t"] >= cutoff]
+    if not len(wk):
+        return
+    ov = (wk["result"] == "hit").mean()
+    lines = ["📊 Weekly signal report card",
+             f"{health_dot(ov)} Overall: {ov*100:.0f}% of {len(wk)} scored calls"]
+    st = wk[wk["strong"] == 1]
+    if len(st):
+        sr = (st["result"] == "hit").mean()
+        lines.append(f"{health_dot(sr)} STRONG only: {sr*100:.0f}% of {len(st)}")
+    for key, g in wk.groupby("key"):
+        r = (g["result"] == "hit").mean()
+        lines.append(f"{health_dot(r)} {key}: {r*100:.0f}% of {len(g)}")
+    tg("\n".join(lines))
+
+
+def main():
+    try:
+        state = json.load(open(STATE_FILE))
+    except Exception:
+        state = {}
+    try:
+        sigdata = json.load(open(SIGNALS_FILE))
+    except Exception:
+        sigdata = {"latest": {}, "history": []}
+    try:
+        bt = json.load(open(BT_FILE))
+    except Exception:
+        bt = {}
+    log = load_log()
+
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    bt_budget = BT_PER_RUN
+    feats = None
+    for sym in COINS:
+        for iv, tfname in TFS:
+            key = f"{sym}:{iv}"
+            try:
+                d = build(klines(sym, iv))
+                if feats is None:
+                    feats = [c for c in d.columns
+                             if c not in ("target", "close", "ct")]
+
+                b = bt.get(key)
+                if bt_budget > 0 and (
+                        not b or now_ms - b["at"] > BT_REFRESH_DAYS * 86400000):
+                    res = backtest_key(d, feats)
+                    if res:
+                        bt[key] = res
+                        bt_budget -= 1
+                        print(f"{key}: backtest strong "
+                              f"{res['strong'][0]}/{res['strong'][1]}, "
+                              f"acc {res['acc']:.3f}")
+
+                train = d[d["target"].notna()]
+                if len(train) < MIN_ROWS.get(iv, 300):
+                    continue
+                model = make_model()
+                model.fit(train[feats], train["target"].astype(int))
+
+                newest = d.iloc[-1]
+                candle = str(int(newest["ct"]))
+                if state.get(key) == candle:
+                    continue
+                state[key] = candle
+
+                p = float(model.predict_proba(
+                    newest[feats].to_frame().T)[:, 1][0])
+                if iv == "5m":
+                    di = depth_imbalance(sym)
+                    if di is not None:
+                        p = 0.8 * p + 0.2 * di
+                call, direction, strong = label(p)
+                px = float(newest["close"])
+
+                for e in reversed(sigdata["history"]):
+                    if e["key"] == key and e.get("result") is None:
+                        if e["dir"] != 0:
+                            e["result"] = (e["dir"] == 1) == (px > e["price"])
+                            res = "hit" if e["result"] else "miss"
+                        else:
+                            e["result"] = "na"
+                            res = "na"
+                        log_append([e["t"], key, e["call"], e["dir"],
+                                    1 if "STRONG" in e["call"] else 0,
+                                    e["p"], e["price"], px, res])
+                        break
+
+                rate, rn = reliability(log, bt, key)
+
+                sigdata["history"].append(
+                    {"key": key, "t": int(newest["ct"]), "price": px,
+                     "p": round(p, 4), "call": call, "dir": direction,
+                     "result": None})
+                sigdata["history"] = sigdata["history"][-600:]
+                sigdata["latest"][key] = {
+                    "call": call, "p": round(p, 4), "price": px,
+                    "t": int(newest["ct"]),
+                    "rel": round(rate, 3) if rate is not None else None,
+                    "reln": rn}
+
+                pxs = f"{px:,.2f}" if px >= 1 else f"{px:.5f}"
+                print(f"{key}: {call} p={p:.3f} @ ${pxs}")
+
+                if strong:
+                    muted = (rn >= MUTE_MIN_CALLS and rate is not None
+                             and rate < MUTE_BELOW)
+                    if muted:
+                        print(f"{key}: STRONG alert muted "
+                              f"({rate*100:.0f}% of {rn})")
+                    else:
+                        rec = (f"\n{health_dot(rate)} Reliability: "
+                               f"{rate*100:.0f}% of {rn} calls"
+                               if rate is not None and rn >= 5 else "")
+                        tg(f"{emoji_for(call)} "
+                           f"{sym.replace('USDT','')} {tfname}: {call}\n"
+                           f"P(up) {p*100:.1f}% at ${pxs}{rec}")
+            except Exception as e:
+                print(f"{key}: error {e}", file=sys.stderr)
+
+    log = load_log()
+    weekly_report(log, state)
+
+    json.dump(state, open(STATE_FILE, "w"), indent=0)
+    json.dump(sigdata, open(SIGNALS_FILE, "w"), indent=0)
+    json.dump(bt, open(BT_FILE, "w"), indent=0)
+
+
+if __name__ == "__main__":
+    main()
