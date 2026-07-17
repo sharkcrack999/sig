@@ -81,6 +81,11 @@ main{max-width:920px;margin:0 auto;padding:16px 26px 8px}
 section{max-width:920px;margin:0 auto;padding:4px 26px}
 h2{font-size:10px;letter-spacing:.2em;color:var(--faint);
   text-transform:uppercase;margin:22px 0 11px}
+#tfchips{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 10px}
+#tfchips button{font-family:inherit;font-size:11px;font-weight:600;
+  padding:4px 11px;border-radius:99px;cursor:pointer;
+  background:var(--panel);color:var(--dim);border:1px solid var(--line)}
+#tfchips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 table.hist{width:100%;border-collapse:collapse;font-size:13.5px;
   background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .hist th{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
@@ -125,6 +130,7 @@ footer{max-width:920px;margin:0 auto;padding:20px 26px 42px;
 <main id="board"><div class="empty">Waiting for data…</div></main>
 <section id="histwrap">
   <h2>Recent calls</h2>
+  <div id="tfchips"></div>
   <table class="hist"><thead><tr><th>Market</th><th>When</th><th>Call</th>
   <th>Gain</th><th>Result</th></tr></thead><tbody id="hist"></tbody></table>
 </section>
@@ -144,6 +150,7 @@ const TFN={"5m":"5 MIN","30m":"30 MIN","1h":"1 HOUR","1d":"1 DAY","1w":"1 WEEK"}
 const TFMS={"5m":300000,"30m":1800000,"1h":3600000,"1d":86400000,"1w":604800000};
 const CO=["BTC","ETH","SOL","BNB","XRP","DOGE","ADA","TRX","AVAX","LINK"];
 let DATA=null,SEL=(location.hash||"").replace("#","").toUpperCase()||"ALL";
+let TFSEL="ALL";
 const short=s=>s.replace("USDT","");
 const cls=c=>c.includes("BUY")?"buy":c.includes("SELL")?"sell":"neut";
 const arrow=c=>c==="STRONG BUY"?"▲▲":c==="BUY"?"▲":c==="STRONG SELL"?"▼▼":c==="SELL"?"▼":"—";
@@ -189,6 +196,7 @@ function relHTML(key){
 }
 function pick(c){SEL=c;location.hash=c==="ALL"?"":c.toLowerCase();
   if(DATA)render(DATA);}
+function pickTF(t){TFSEL=t;if(DATA)render(DATA);}
 function render(d){
   DATA=d;
   const coins={};
@@ -262,57 +270,4 @@ function render(d){
   document.getElementById("statbar").innerHTML=`
     <div class="stat"><div class="k">Signals scored</div>
       <div class="v mono">${sc.length} <small>${pend} pending</small></div></div>
-    <div class="stat"><div class="k">Accuracy</div>
-      <div class="v mono">${pc(hits,sc.length)}</div></div>
-    <div class="stat"><div class="k">Strong accuracy</div>
-      <div class="v mono">${pc(sth,st.length)}</div></div>
-    <div class="stat"><div class="k">Gain after fees</div>
-      <div class="v mono ${netAfter>=0?"g-pos":"g-neg"}">${sc.length?fg(netAfter):"—"}
-      <small>${sc.length?"gross "+fg(net):""}</small></div></div>`;
-  tickTimers();
-  PNL={};
-  for(const r of LOG){
-    const g=(+r.dir)*((+r.next_price)/(+r.price)-1);
-    if(isFinite(g))PNL[r.key+"|"+r.t]=g;
-  }
-  const hist=(d.history||[]).filter(e=>SEL==="ALL"||short(e.key.split(":")[0])===SEL)
-    .slice(-15).reverse();
-  document.getElementById("hist").innerHTML=hist.length?hist.map(e=>{
-    const [sym,tf]=e.key.split(":");
-    const rowCls=e.result===true?"rh":e.result===false?"rm":"";
-    const pill=e.result===null?`<span class="pill pend">···</span>`:
-      e.result==="na"?"":
-      e.result?`<span class="pill ok">✓</span>`:`<span class="pill bad">✕</span>`;
-    const g=PNL[e.key+"|"+e.t];
-    const gain=e.result===null||e.result==="na"?`<span class="mono" style="color:var(--faint)">···</span>`:
-      g===undefined?"—":
-      `<span class="mono ${g>=0?"g-pos":"g-neg"}">${fg(g)}</span>`;
-    return `<tr class="${rowCls}" onclick="pick('${short(sym)}')">
-      <td>${short(sym)} <span class="mono" style="color:var(--faint)">${tf}</span></td>
-      <td class="mono">${ago(e.t)}</td>
-      <td class="c-${cls(e.call)}">${arrow(e.call)} ${e.call}</td>
-      <td>${gain}</td>
-      <td>${pill}</td></tr>`}).join("")
-    :`<tr><td class="empty" colspan="5">No calls yet</td></tr>`;
-  const ts=Math.max(0,...Object.values(d.latest||{}).map(v=>v.t));
-  document.getElementById("upd").textContent=ts?("updated "+ago(ts)+" ago"):"no data";
-}
-async function load(){
-  try{
-    const d=await fetch(RAW+"?x="+Date.now()).then(r=>r.json());
-    try{
-      const t=await fetch(LOGRAW+"?x="+Date.now()).then(r=>r.text());
-      const rows=t.trim().split("\n");const head=rows[0].split(",");
-      LOG=rows.slice(1).map(l=>{const c=l.split(",");const o={};
-        head.forEach((h,i)=>o[h]=c[i]);return o;});
-    }catch(e){LOG=[];}
-    render(d);
-    document.getElementById("dot").style.background="var(--buy)";
-  }catch(e){
-    document.getElementById("dot").style.background="var(--sell)";
-    document.getElementById("upd").textContent="waiting for data";
-  }
-}
-load();setInterval(load,60000);
-setInterval(tickTimers,500);
-</script></body></html>
+    <div class="stat"><div
