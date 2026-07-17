@@ -135,16 +135,19 @@ function tickTimers(){
   }
 }
 function relFor(key){
+  const lv=(DATA.latest||{})[key];
+  if(lv&&lv.rel!=null&&lv.reln>=5)return{r:lv.rel,n:lv.reln,src:lv.rsrc||"live"};
   const x=(DATA.history||[]).filter(e=>e.key===key&&
     (e.result===true||e.result===false)).slice(-30);
   if(x.length<5)return null;
-  return {r:x.filter(e=>e.result===true).length/x.length,n:x.length};
+  return {r:x.filter(e=>e.result===true).length/x.length,n:x.length,src:"live"};
 }
 function relHTML(key){
   const v=relFor(key);
   if(!v)return `<div class="rel">rel —</div>`;
   const c=v.r>=0.55?"r-g":v.r>=0.45?"r-y":"r-r";
-  return `<div class="rel ${c}">rel ${(v.r*100).toFixed(0)}%</div>`;
+  const tag=v.src==="bt"?"·bt":v.src==="mix"?"·mx":"";
+  return `<div class="rel ${c}">rel ${(v.r*100).toFixed(0)}%${tag}</div>`;
 }
 function pick(c){SEL=c;location.hash=c==="ALL"?"":c.toLowerCase();
   if(DATA)render(DATA);}
