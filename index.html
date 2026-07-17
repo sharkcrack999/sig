@@ -1,0 +1,53 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Signals</title>
+<style>
+body{background:#101418;color:#dbe4ec;font-family:system-ui;margin:0;padding:24px}
+h1{font-size:12px;letter-spacing:.12em;color:#7d8b99;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:16px 0}
+.card{background:#171d24;border:1px solid #232c36;border-radius:8px;padding:12px}
+.k{font-size:11px;color:#5ab8d4;letter-spacing:.08em}
+.call{font-size:18px;font-weight:800;margin:6px 0}
+.buy{color:#3ecf8e}.sell{color:#f06a5d}.neut{color:#c9a24b}
+.sub{font-size:11px;color:#7d8b99;font-family:monospace}
+table{border-collapse:collapse;font-family:monospace;font-size:12px;width:100%;max-width:760px}
+td,th{padding:5px 9px;border-bottom:1px solid #232c36;text-align:left}
+th{color:#4a5763;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.hit{color:#3ecf8e}.miss{color:#f06a5d}.pend{color:#4a5763}
+footer{color:#4a5763;font-size:11px;margin-top:20px;max-width:560px;line-height:1.5}
+</style></head><body>
+<h1>Crypto signals · live board</h1>
+<div class="grid" id="grid">loading…</div>
+<h1>Recent calls</h1>
+<table><thead><tr><th>Pair·TF</th><th>Time UTC</th><th>Price</th><th>P(up)</th><th>Call</th><th>Result</th></tr></thead>
+<tbody id="hist"></tbody></table>
+<h1 style="margin-top:20px">Hit rates (scored calls only)</h1>
+<table><tbody id="rates"></tbody></table>
+<footer>Updates every ~5 minutes from the GitHub Actions worker, the same brain
+that sends the Telegram alerts. Nothing here trades.</footer>
+<script>
+const RAW="https://raw.githubusercontent.com/sharkcrack999/sig/main/signals.json";
+const cls=c=>c.includes("BUY")?"buy":c.includes("SELL")?"sell":"neut";
+const fp=p=>"$"+(p>=1?p.toLocaleString(undefined,{maximumFractionDigits:2}):p.toFixed(5));
+const ft=t=>new Date(t).toISOString().slice(5,16).replace("T"," ");
+async function load(){
+ try{
+  const d=await fetch(RAW+"?x="+Date.now()).then(r=>r.json());
+  document.getElementById("grid").innerHTML=Object.entries(d.latest).map(([k,v])=>
+   `<div class="card"><div class="k">${k}</div><div class="call ${cls(v.call)}">${v.call}</div>
+    <div class="sub">P(up) ${(v.p*100).toFixed(1)}% · ${fp(v.price)}</div></div>`).join("");
+  document.getElementById("hist").innerHTML=d.history.slice(-40).reverse().map(e=>{
+   const r=e.result===null?["pend","…"]:e.result==="na"?["pend",""]:e.result?["hit","hit"]:["miss","miss"];
+   return `<tr><td>${e.key}</td><td>${ft(e.t)}</td><td>${fp(e.price)}</td>
+    <td>${(e.p*100).toFixed(1)}%</td><td class="${cls(e.call)}">${e.call}</td>
+    <td class="${r[0]}">${r[1]}</td></tr>`}).join("");
+  const agg={};
+  for(const e of d.history){if(e.result===true||e.result===false){
+   agg[e.key]=agg[e.key]||[0,0];agg[e.key][1]++;if(e.result)agg[e.key][0]++;}}
+  document.getElementById("rates").innerHTML=Object.entries(agg).map(([k,[h,n]])=>
+   `<tr><td>${k}</td><td>${(100*h/n).toFixed(0)}% of ${n}</td></tr>`).join("")
+   ||"<tr><td>no scored calls yet</td></tr>";
+ }catch(e){}
+}
+load();setInterval(load,60000);
+</script></body></html>
