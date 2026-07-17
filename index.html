@@ -108,6 +108,8 @@ Timers count down to each candle close. Updates every minute from the Actions
 worker. Nothing on this page trades.</footer>
 <script>
 const RAW="https://raw.githubusercontent.com/sharkcrack999/sig/main/signals.json";
+const LOGRAW="https://raw.githubusercontent.com/sharkcrack999/sig/main/log.csv";
+let LOG=[];
 const TFS=["5m","30m","1h","1d","1w"];
 const TFN={"5m":"5 MIN","30m":"30 MIN","1h":"1 HOUR","1d":"1 DAY","1w":"1 WEEK"};
 const TFMS={"5m":300000,"30m":1800000,"1h":3600000,"1d":86400000,"1w":604800000};
@@ -229,6 +231,12 @@ function render(d){
 async function load(){
   try{
     const d=await fetch(RAW+"?x="+Date.now()).then(r=>r.json());
+    try{
+      const t=await fetch(LOGRAW+"?x="+Date.now()).then(r=>r.text());
+      const rows=t.trim().split("\n");const head=rows[0].split(",");
+      LOG=rows.slice(1).map(l=>{const c=l.split(",");const o={};
+        head.forEach((h,i)=>o[h]=c[i]);return o;});
+    }catch(e){LOG=[];}
     render(d);
     document.getElementById("dot").style.background="var(--buy)";
   }catch(e){
