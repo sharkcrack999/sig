@@ -1,13 +1,16 @@
-"""Always-on crypto signal job - runs on GitHub Actions cron (free).
+"""Always-on crypto signal job with back-learning - GitHub Actions (free).
 
-Each run: for every coin x timeframe, fetch recent candles, train an XGBoost
-direction classifier fresh, predict the newest closed candle, and send a
-Telegram message on STRONG BUY / STRONG SELL. state.json prevents duplicate
-alerts. Hypothetical signals only. Nothing here trades. Not investment advice.
+Trains XGBoost per coin x timeframe, predicts newest closed candle, alerts
+Telegram on STRONG calls. Back-learn layer: permanent log.csv archive of all
+resolved signals, trailing track record shown in every alert, weekly Monday
+report card, and auto-mute of signal types whose STRONG calls prove bad.
+Hypothetical signals only. Nothing trades. Not investment advice.
 """
+import csv
 import json
 import os
 import sys
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -19,8 +22,12 @@ COINS = [s.strip() for s in os.environ.get(
     "COINS", "BTCUSDT,ETHUSDT,SOLUSDT").split(",") if s.strip()]
 TFS = [("5m", "5 MIN"), ("30m", "30 MIN"), ("1h", "1 HOUR")]
 STATE_FILE = "state.json"
+SIGNALS_FILE = "signals.json"
+LOG_FILE = "log.csv"
 
 STRONG_HI, HI, LO, STRONG_LO = 0.66, 0.58, 0.42, 0.34
+MUTE_MIN_CALLS = 30      # need this many scored STRONG calls before muting
+MUTE_BELOW = 0.48        # mute a key's STRONG alerts if trailing hit rate < this
 
 
 def klines(sym, iv, limit=1000):
@@ -91,11 +98,70 @@ def tg(text):
                   json={"chat_id": chat, "text": text}, timeout=15)
 
 
+def log_append(row):
+    new = not os.path.exists(LOG_FILE)
+    with open(LOG_FILE, "a", newline="") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["t", "key", "call", "dir", "strong", "p",
+                        "price", "next_price", "result"])
+        w.writerow(row)
+
+
+def load_log():
+    try:
+        return pd.read_csv(LOG_FILE)
+    except Exception:
+        return pd.DataFrame(columns=["t", "key", "call", "dir", "strong",
+                                     "p", "price", "next_price", "result"])
+
+
+def track_record(log, key, strong_only=True, window=30):
+    x = log[(log["key"] == key) & (log["result"].isin(["hit", "miss"]))]
+    if strong_only:
+        x = x[x["strong"] == 1]
+    x = x.tail(window)
+    if not len(x):
+        return None, 0
+    return (x["result"] == "hit").mean(), len(x)
+
+
+def weekly_report(log, state):
+    week = datetime.now(timezone.utc).strftime("%G-W%V")
+    if state.get("_report_week") == week:
+        return
+    state["_report_week"] = week
+    scored = log[log["result"].isin(["hit", "miss"])]
+    if len(scored) < 10:
+        return  # not enough history yet
+    cutoff = (datetime.now(timezone.utc).timestamp() - 7 * 86400) * 1000
+    wk = scored[scored["t"] >= cutoff]
+    if not len(wk):
+        return
+    lines = ["Weekly signal report card",
+             f"Scored calls: {len(wk)} | overall hit rate: "
+             f"{(wk['result'] == 'hit').mean() * 100:.0f}%"]
+    st = wk[wk["strong"] == 1]
+    if len(st):
+        lines.append(f"STRONG calls: {len(st)} | hit rate: "
+                     f"{(st['result'] == 'hit').mean() * 100:.0f}%")
+    for key, g in wk.groupby("key"):
+        lines.append(f"{key}: {(g['result'] == 'hit').mean() * 100:.0f}% "
+                     f"of {len(g)}")
+    lines.append("Hypothetical signals, not advice.")
+    tg("\n".join(lines))
+
+
 def main():
     try:
         state = json.load(open(STATE_FILE))
     except Exception:
         state = {}
+    try:
+        sigdata = json.load(open(SIGNALS_FILE))
+    except Exception:
+        sigdata = {"latest": {}, "history": []}
+    log = load_log()
 
     feats = None
     for sym in COINS:
@@ -129,17 +195,23 @@ def main():
                         p = 0.8 * p + 0.2 * di
                 call, direction, strong = label(p)
                 px = float(newest["close"])
-                pxs = f"{px:,.2f}" if px >= 1 else f"{px:.5f}"
-                print(f"{key}: {call} p={p:.3f} @ ${pxs}")
-                if strong:
-                    tg(f"{sym.replace('USDT','')} {tfname}: {call}\n"
-                       f"P(up) {p*100:.1f}% at ${pxs}\n"
-                       f"Hypothetical signal, not advice.")
-            except Exception as e:
-                print(f"{key}: error {e}", file=sys.stderr)
 
-    json.dump(state, open(STATE_FILE, "w"), indent=0)
+                # resolve previous pending entry -> archive to log.csv
+                for e in reversed(sigdata["history"]):
+                    if e["key"] == key and e.get("result") is None:
+                        if e["dir"] != 0:
+                            e["result"] = (e["dir"] == 1) == (px > e["price"])
+                            res = "hit" if e["result"] else "miss"
+                        else:
+                            e["result"] = "na"
+                            res = "na"
+                        log_append([e["t"], key, e["call"], e["dir"],
+                                    1 if "STRONG" in e["call"] else 0,
+                                    e["p"], e["price"], px, res])
+                        break
 
-
-if __name__ == "__main__":
-    main()
+                sigdata["history"].append(
+                    {"key": key, "t": int(newest["ct"]), "price": px,
+                     "p": round(p, 4), "call": call, "dir": direction,
+                     "result": None})
+                sigdata["history"] =
