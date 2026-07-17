@@ -93,9 +93,12 @@ table.hist{width:100%;border-collapse:collapse;font-size:13.5px;
 .hist tr.rh td:first-child{box-shadow:inset 3px 0 0 var(--buy)}
 .hist tr.rm td{background:var(--sellt)}
 .hist tr.rm td:first-child{box-shadow:inset 3px 0 0 var(--sell)}
-.c-buy{color:var(--buy);font-weight:600}
-.c-sell{color:var(--sell);font-weight:600}
-.c-neut{color:var(--warn);font-weight:600}
+.c-buy,.hist td.c-buy{color:var(--buy);font-weight:600}
+.c-sell,.hist td.c-sell{color:var(--sell);font-weight:600}
+.c-neut,.hist td.c-neut{color:var(--warn);font-weight:600}
+.hist th{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--faint);font-weight:600;text-align:left;padding:10px 13px;
+  border-bottom:1px solid var(--line);background:#FBFCFD}
 .g-pos{color:var(--buy);font-weight:600}
 .g-neg{color:var(--sell);font-weight:600}
 .pill{display:inline-block;min-width:24px;text-align:center;border-radius:99px;
@@ -122,7 +125,8 @@ footer{max-width:920px;margin:0 auto;padding:20px 26px 42px;
 <main id="board"><div class="empty">Waiting for data…</div></main>
 <section id="histwrap">
   <h2>Recent calls</h2>
-  <table class="hist"><tbody id="hist"></tbody></table>
+  <table class="hist"><thead><tr><th>Market</th><th>When</th><th>Call</th>
+<th>Gain</th><th>Result</th></tr></thead><tbody id="hist"></tbody></table>
 </section>
 <footer>▲▲ strong buy · ▲ buy · — neutral · ▼ sell · ▼▼ strong sell.
 Gain = hypothetical return of that position over its candle, equal stake per
