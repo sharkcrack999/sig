@@ -212,6 +212,23 @@ function render(d){
           </div>`}).join("")}</div>`;
     }
   }
+  const sc=LOG.filter(r=>(r.result==="hit"||r.result==="miss")&&
+    (SEL==="ALL"||r.key.startsWith(SEL)));
+  const hits=sc.filter(r=>r.result==="hit").length;
+  const st=sc.filter(r=>r.strong==="1");
+  const sth=st.filter(r=>r.result==="hit").length;
+  const pend=(d.history||[]).filter(e=>e.result===null&&e.dir!==0&&
+    (SEL==="ALL"||short(e.key.split(":")[0])===SEL)).length;
+  const pc=(h,n)=>n?((100*h/n).toFixed(1)+"%"):"—";
+  document.getElementById("statbar").innerHTML=`
+    <div class="stat"><div class="k">Signals scored</div>
+      <div class="v mono">${sc.length}</div></div>
+    <div class="stat"><div class="k">Successful</div>
+      <div class="v mono">${hits} <small>hits</small></div></div>
+    <div class="stat"><div class="k">Accuracy</div>
+      <div class="v mono">${pc(hits,sc.length)}</div></div>
+    <div class="stat"><div class="k">Strong accuracy</div>
+      <div class="v mono">${pc(sth,st.length)} <small>${pend} pending</small></div></div>`;
   tickTimers();
   const hist=(d.history||[]).filter(e=>SEL==="ALL"||short(e.key.split(":")[0])===SEL)
     .slice(-15).reverse();
