@@ -19,7 +19,9 @@ from xgboost import XGBClassifier
 DATA = "https://data-api.binance.vision/api/v3"
 COINS = [s.strip() for s in os.environ.get(
     "COINS", "BTCUSDT,ETHUSDT,SOLUSDT").split(",") if s.strip()]
-TFS = [("5m", "5 MIN"), ("30m", "30 MIN"), ("1h", "1 HOUR")]
+TFS = [("5m", "5 MIN"), ("30m", "30 MIN"), ("1h", "1 HOUR"),
+       ("1d", "1 DAY"), ("1w", "1 WEEK")]
+MIN_ROWS = {"5m": 300, "30m": 300, "1h": 300, "1d": 300, "1w": 120}
 STATE_FILE = "state.json"
 SIGNALS_FILE = "signals.json"
 LOG_FILE = "log.csv"
@@ -181,7 +183,7 @@ def main():
                     feats = [c for c in d.columns
                              if c not in ("target", "close", "ct")]
                 train = d[d["target"].notna()]
-                if len(train) < 300:
+                if len(train) < MIN_ROWS.get(iv, 300):
                     continue
                 model = XGBClassifier(
                     n_estimators=150, max_depth=4, learning_rate=0.07,
