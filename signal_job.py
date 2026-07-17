@@ -3,8 +3,7 @@
 Trains XGBoost per coin x timeframe, predicts newest closed candle, alerts
 Telegram on STRONG calls with color emoji. Back-learn layer: permanent
 log.csv archive, trailing track record in every alert, weekly Monday report
-card, auto-mute of signal types whose STRONG calls prove bad.
-Hypothetical signals only. Nothing trades. Not investment advice.
+card, auto-mute of signal types whose STRONG calls prove bad. Nothing trades.
 """
 import csv
 import json
@@ -158,7 +157,6 @@ def weekly_report(log, state):
     for key, g in wk.groupby("key"):
         r = (g["result"] == "hit").mean()
         lines.append(f"{health_dot(r)} {key}: {r*100:.0f}% of {len(g)}")
-    lines.append("Hypothetical signals, not advice.")
     tg("\n".join(lines))
 
 
@@ -243,8 +241,7 @@ def main():
                                if n >= 5 else "")
                         tg(f"{emoji_for(call)} "
                            f"{sym.replace('USDT','')} {tfname}: {call}\n"
-                           f"P(up) {p*100:.1f}% at ${pxs}{rec}\n"
-                           f"Hypothetical signal, not advice.")
+                           f"P(up) {p*100:.1f}% at ${pxs}{rec}")
             except Exception as e:
                 print(f"{key}: error {e}", file=sys.stderr)
 
