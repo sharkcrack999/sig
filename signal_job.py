@@ -1,9 +1,9 @@
 """Always-on crypto signal job with back-learning - GitHub Actions (free).
 
 Trains XGBoost per coin x timeframe, predicts newest closed candle, alerts
-Telegram on STRONG calls. Back-learn layer: permanent log.csv archive of all
-resolved signals, trailing track record shown in every alert, weekly Monday
-report card, and auto-mute of signal types whose STRONG calls prove bad.
+Telegram on STRONG calls with color emoji. Back-learn layer: permanent
+log.csv archive, trailing track record in every alert, weekly Monday report
+card, auto-mute of signal types whose STRONG calls prove bad.
 Hypothetical signals only. Nothing trades. Not investment advice.
 """
 import csv
@@ -26,8 +26,18 @@ SIGNALS_FILE = "signals.json"
 LOG_FILE = "log.csv"
 
 STRONG_HI, HI, LO, STRONG_LO = 0.66, 0.58, 0.42, 0.34
-MUTE_MIN_CALLS = 30      # need this many scored STRONG calls before muting
-MUTE_BELOW = 0.48        # mute a key's STRONG alerts if trailing hit rate < this
+MUTE_MIN_CALLS = 30
+MUTE_BELOW = 0.48
+
+
+def emoji_for(call):
+    if "BUY" in call: return "🟢🟢" if "STRONG" in call else "🟢"
+    if "SELL" in call: return "🔴🔴" if "STRONG" in call else "🔴"
+    return "🟡"
+
+
+def health_dot(rate):
+    return "🟢" if rate >= 0.55 else "🟡" if rate >= 0.45 else "🔴"
 
 
 def klines(sym, iv, limit=1000):
@@ -133,21 +143,21 @@ def weekly_report(log, state):
     state["_report_week"] = week
     scored = log[log["result"].isin(["hit", "miss"])]
     if len(scored) < 10:
-        return  # not enough history yet
+        return
     cutoff = (datetime.now(timezone.utc).timestamp() - 7 * 86400) * 1000
     wk = scored[scored["t"] >= cutoff]
     if not len(wk):
         return
-    lines = ["Weekly signal report card",
-             f"Scored calls: {len(wk)} | overall hit rate: "
-             f"{(wk['result'] == 'hit').mean() * 100:.0f}%"]
+    ov = (wk["result"] == "hit").mean()
+    lines = ["📊 Weekly signal report card",
+             f"{health_dot(ov)} Overall: {ov*100:.0f}% of {len(wk)} scored calls"]
     st = wk[wk["strong"] == 1]
     if len(st):
-        lines.append(f"STRONG calls: {len(st)} | hit rate: "
-                     f"{(st['result'] == 'hit').mean() * 100:.0f}%")
+        sr = (st["result"] == "hit").mean()
+        lines.append(f"{health_dot(sr)} STRONG only: {sr*100:.0f}% of {len(st)}")
     for key, g in wk.groupby("key"):
-        lines.append(f"{key}: {(g['result'] == 'hit').mean() * 100:.0f}% "
-                     f"of {len(g)}")
+        r = (g["result"] == "hit").mean()
+        lines.append(f"{health_dot(r)} {key}: {r*100:.0f}% of {len(g)}")
     lines.append("Hypothetical signals, not advice.")
     tg("\n".join(lines))
 
@@ -196,7 +206,6 @@ def main():
                 call, direction, strong = label(p)
                 px = float(newest["close"])
 
-                # resolve previous pending entry -> archive to log.csv
                 for e in reversed(sigdata["history"]):
                     if e["key"] == key and e.get("result") is None:
                         if e["dir"] != 0:
@@ -214,4 +223,37 @@ def main():
                     {"key": key, "t": int(newest["ct"]), "price": px,
                      "p": round(p, 4), "call": call, "dir": direction,
                      "result": None})
-                sigdata["history"] =
+                sigdata["history"] = sigdata["history"][-400:]
+                sigdata["latest"][key] = {"call": call, "p": round(p, 4),
+                                          "price": px, "t": int(newest["ct"])}
+
+                pxs = f"{px:,.2f}" if px >= 1 else f"{px:.5f}"
+                print(f"{key}: {call} p={p:.3f} @ ${pxs}")
+
+                if strong:
+                    hr, n = track_record(log, key)
+                    muted = (n >= MUTE_MIN_CALLS and hr is not None
+                             and hr < MUTE_BELOW)
+                    if muted:
+                        print(f"{key}: STRONG alert muted "
+                              f"(track record {hr*100:.0f}% of {n})")
+                    else:
+                        rec = (f"\n{health_dot(hr)} Track record: "
+                               f"{hr*100:.0f}% of last {n} STRONG calls"
+                               if n >= 5 else "")
+                        tg(f"{emoji_for(call)} "
+                           f"{sym.replace('USDT','')} {tfname}: {call}\n"
+                           f"P(up) {p*100:.1f}% at ${pxs}{rec}\n"
+                           f"Hypothetical signal, not advice.")
+            except Exception as e:
+                print(f"{key}: error {e}", file=sys.stderr)
+
+    log = load_log()
+    weekly_report(log, state)
+
+    json.dump(state, open(STATE_FILE, "w"), indent=0)
+    json.dump(sigdata, open(SIGNALS_FILE, "w"), indent=0)
+
+
+if __name__ == "__main__":
+    main()
