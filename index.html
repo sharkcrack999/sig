@@ -1,53 +1,152 @@
-<!DOCTYPE html><html><head><meta charset="utf-8">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>Signals</title>
+<meta name="robots" content="noindex"><title>SIG · signal desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-body{background:#101418;color:#dbe4ec;font-family:system-ui;margin:0;padding:24px}
-h1{font-size:12px;letter-spacing:.12em;color:#7d8b99;text-transform:uppercase}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:16px 0}
-.card{background:#171d24;border:1px solid #232c36;border-radius:8px;padding:12px}
-.k{font-size:11px;color:#5ab8d4;letter-spacing:.08em}
-.call{font-size:18px;font-weight:800;margin:6px 0}
-.buy{color:#3ecf8e}.sell{color:#f06a5d}.neut{color:#c9a24b}
-.sub{font-size:11px;color:#7d8b99;font-family:monospace}
-table{border-collapse:collapse;font-family:monospace;font-size:12px;width:100%;max-width:760px}
-td,th{padding:5px 9px;border-bottom:1px solid #232c36;text-align:left}
-th{color:#4a5763;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
-.hit{color:#3ecf8e}.miss{color:#f06a5d}.pend{color:#4a5763}
-footer{color:#4a5763;font-size:11px;margin-top:20px;max-width:560px;line-height:1.5}
+:root{
+  --bg:#0B0E13;--panel:#131820;--panel2:#161C26;--line:#202834;
+  --ink:#E7ECF3;--dim:#8A96A6;--faint:#566073;
+  --buy:#2FD48D;--sell:#FF6D5F;--neut:#D9B65C;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:"Space Grotesk",system-ui,sans-serif;min-height:100vh}
+.mono{font-family:"IBM Plex Mono",monospace}
+header{display:flex;justify-content:space-between;align-items:center;
+  padding:20px 28px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{font-size:20px;font-weight:700;letter-spacing:.06em}
+.brand span{font-size:11px;color:var(--faint);letter-spacing:.14em;text-transform:uppercase}
+.live{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--buy);
+  animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.dot{animation:none}}
+main{max-width:1080px;margin:0 auto;padding:26px 28px 10px}
+.coin{margin-bottom:28px}
+.coinhead{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.coinhead b{font-size:22px;font-weight:700}
+.coinhead .pair{font-size:11px;color:var(--faint);letter-spacing:.12em}
+.coinhead .px{margin-left:auto;font-size:14px;color:var(--dim)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:16px 18px}
+.card .tf{display:flex;justify-content:space-between;font-size:10px;
+  letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin-bottom:14px}
+.gauge{position:relative;height:4px;border-radius:2px;margin-bottom:14px;
+  background:linear-gradient(90deg,var(--sell),#3A4150 46%,#3A4150 54%,var(--buy))}
+.gauge i{position:absolute;top:-4px;width:2px;height:12px;background:var(--ink);
+  border-radius:1px;transform:translateX(-1px)}
+.gauge u{position:absolute;top:-1px;left:50%;width:1px;height:6px;background:#0B0E13}
+.call{font-size:24px;font-weight:700;letter-spacing:-.01em;line-height:1.05;min-height:27px}
+.call.buy{color:var(--buy)}.call.sell{color:var(--sell)}.call.neut{color:var(--neut)}
+.card .meta{margin-top:8px;font-size:12px;color:var(--dim)}
+.card .meta b{color:var(--ink);font-weight:500}
+section{max-width:1080px;margin:0 auto;padding:6px 28px 8px}
+h2{font-size:10px;letter-spacing:.2em;color:var(--faint);
+  text-transform:uppercase;margin:22px 0 12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;padding:7px 10px;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint);font-weight:500;
+  border-bottom:1px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--dim)}
+td:first-child{color:var(--ink)}
+.chip{display:inline-block;font-size:10px;letter-spacing:.08em;padding:2px 7px;
+  border-radius:99px;border:1px solid var(--line);color:var(--dim)}
+.c-buy{color:var(--buy)}.c-sell{color:var(--sell)}.c-neut{color:var(--neut)}
+.ok{color:var(--buy)}.bad{color:var(--sell)}.pend{color:var(--faint)}
+.bar{position:relative;height:5px;width:130px;background:var(--line);
+  border-radius:3px;display:inline-block;vertical-align:middle}
+.bar i{position:absolute;inset:0;border-radius:3px}
+.empty{padding:34px 0;color:var(--faint);font-size:13px}
+footer{max-width:1080px;margin:0 auto;padding:22px 28px 44px;
+  color:var(--faint);font-size:11px;line-height:1.6;border-top:1px solid var(--line)}
+@media(max-width:560px){
+  header,main,section,footer{padding-left:16px;padding-right:16px}
+  .coinhead b{font-size:18px}.call{font-size:20px}
+}
 </style></head><body>
-<h1>Crypto signals · live board</h1>
-<div class="grid" id="grid">loading…</div>
-<h1>Recent calls</h1>
-<table><thead><tr><th>Pair·TF</th><th>Time UTC</th><th>Price</th><th>P(up)</th><th>Call</th><th>Result</th></tr></thead>
-<tbody id="hist"></tbody></table>
-<h1 style="margin-top:20px">Hit rates (scored calls only)</h1>
-<table><tbody id="rates"></tbody></table>
-<footer>Updates every ~5 minutes from the GitHub Actions worker, the same brain
-that sends the Telegram alerts. Nothing here trades.</footer>
+<header>
+  <div class="brand"><b>SIG</b><span>signal desk</span></div>
+  <div class="live"><span class="dot" id="dot"></span><span id="upd" class="mono">connecting…</span></div>
+</header>
+<main id="board"><div class="empty">Waiting for the first worker run…</div></main>
+<section>
+  <h2>Recent calls</h2>
+  <table><thead><tr><th>Market</th><th>When</th><th>Price</th><th>P(up)</th><th>Call</th><th></th></tr></thead>
+  <tbody id="hist"><tr><td class="empty" colspan="6">No calls yet</td></tr></tbody></table>
+  <h2>Track record · scored calls</h2>
+  <table><tbody id="rates"><tr><td class="empty">No scored calls yet</td></tr></tbody></table>
+</section>
+<footer>Refreshes every minute from the Actions worker, the same engine behind the
+Telegram alerts. Nothing on this page trades.</footer>
 <script>
 const RAW="https://raw.githubusercontent.com/sharkcrack999/sig/main/signals.json";
+const TFN={"5m":"5 MIN","30m":"30 MIN","1h":"1 HOUR"};
+const ORDER=["5m","30m","1h"];
 const cls=c=>c.includes("BUY")?"buy":c.includes("SELL")?"sell":"neut";
 const fp=p=>"$"+(p>=1?p.toLocaleString(undefined,{maximumFractionDigits:2}):p.toFixed(5));
-const ft=t=>new Date(t).toISOString().slice(5,16).replace("T"," ");
-async function load(){
- try{
-  const d=await fetch(RAW+"?x="+Date.now()).then(r=>r.json());
-  document.getElementById("grid").innerHTML=Object.entries(d.latest).map(([k,v])=>
-   `<div class="card"><div class="k">${k}</div><div class="call ${cls(v.call)}">${v.call}</div>
-    <div class="sub">P(up) ${(v.p*100).toFixed(1)}% · ${fp(v.price)}</div></div>`).join("");
-  document.getElementById("hist").innerHTML=d.history.slice(-40).reverse().map(e=>{
-   const r=e.result===null?["pend","…"]:e.result==="na"?["pend",""]:e.result?["hit","hit"]:["miss","miss"];
-   return `<tr><td>${e.key}</td><td>${ft(e.t)}</td><td>${fp(e.price)}</td>
-    <td>${(e.p*100).toFixed(1)}%</td><td class="${cls(e.call)}">${e.call}</td>
-    <td class="${r[0]}">${r[1]}</td></tr>`}).join("");
+const ago=t=>{const m=Math.max(0,(Date.now()-t)/60000);
+  return m<1?"now":m<60?Math.round(m)+"m ago":Math.round(m/60)+"h ago"};
+function render(d){
+  const coins={};
+  for(const [k,v] of Object.entries(d.latest||{})){
+    const [sym,tf]=k.split(":");
+    (coins[sym]=coins[sym]||{})[tf]=v;
+  }
+  const names=Object.keys(coins);
+  if(names.length){
+    document.getElementById("board").innerHTML=names.map(sym=>{
+      const tfs=coins[sym];
+      const any=Object.values(tfs)[0];
+      const cards=ORDER.filter(t=>tfs[t]).map(t=>{const v=tfs[t];
+        return `<div class="card">
+          <div class="tf"><span>${TFN[t]||t}</span><span class="mono">${ago(v.t)}</span></div>
+          <div class="gauge"><u></u><i style="left:${(v.p*100).toFixed(1)}%"></i></div>
+          <div class="call ${cls(v.call)}">${v.call}</div>
+          <div class="meta mono">P(up) <b>${(v.p*100).toFixed(1)}%</b> · ${fp(v.price)}</div>
+        </div>`}).join("");
+      return `<div class="coin">
+        <div class="coinhead"><b>${sym.replace("USDT","")}</b><span class="pair">/ USDT</span>
+        <span class="px mono">${fp(any.price)}</span></div>
+        <div class="cards">${cards}</div></div>`;
+    }).join("");
+  }
+  const hist=(d.history||[]).slice(-40).reverse();
+  if(hist.length){
+    document.getElementById("hist").innerHTML=hist.map(e=>{
+      const [sym,tf]=e.key.split(":");
+      const r=e.result===null?["pend","···"]:e.result==="na"?["pend",""]:
+        e.result?["ok","✓"]:["bad","✕"];
+      return `<tr><td>${sym.replace("USDT","")} <span class="chip">${tf}</span></td>
+        <td class="mono">${ago(e.t)}</td><td class="mono">${fp(e.price)}</td>
+        <td class="mono">${(e.p*100).toFixed(1)}%</td>
+        <td class="c-${cls(e.call)}">${e.call}</td>
+        <td class="${r[0]}">${r[1]}</td></tr>`}).join("");
+  }
   const agg={};
-  for(const e of d.history){if(e.result===true||e.result===false){
-   agg[e.key]=agg[e.key]||[0,0];agg[e.key][1]++;if(e.result)agg[e.key][0]++;}}
-  document.getElementById("rates").innerHTML=Object.entries(agg).map(([k,[h,n]])=>
-   `<tr><td>${k}</td><td>${(100*h/n).toFixed(0)}% of ${n}</td></tr>`).join("")
-   ||"<tr><td>no scored calls yet</td></tr>";
- }catch(e){}
+  for(const e of d.history||[]){if(e.result===true||e.result===false){
+    agg[e.key]=agg[e.key]||[0,0];agg[e.key][1]++;if(e.result)agg[e.key][0]++;}}
+  const rows=Object.entries(agg).map(([k,[h,n]])=>{
+    const r=h/n,col=r>=0.55?"var(--buy)":r>=0.45?"var(--neut)":"var(--sell)";
+    const [sym,tf]=k.split(":");
+    return `<tr><td>${sym.replace("USDT","")} <span class="chip">${tf}</span></td>
+      <td><span class="bar"><i style="width:${(r*100).toFixed(0)}%;background:${col}"></i></span></td>
+      <td class="mono">${(r*100).toFixed(0)}% of ${n}</td></tr>`}).join("");
+  if(rows)document.getElementById("rates").innerHTML=rows;
+  const ts=Math.max(0,...Object.values(d.latest||{}).map(v=>v.t));
+  document.getElementById("upd").textContent=ts?("updated "+ago(ts)):"no data yet";
+}
+async function load(){
+  try{
+    const d=await fetch(RAW+"?x="+Date.now()).then(r=>r.json());
+    render(d);
+    document.getElementById("dot").style.background="var(--buy)";
+  }catch(e){
+    document.getElementById("dot").style.background="var(--sell)";
+    document.getElementById("upd").textContent="waiting for data";
+  }
 }
 load();setInterval(load,60000);
 </script></body></html>
