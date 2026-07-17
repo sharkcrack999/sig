@@ -79,10 +79,10 @@
 "t": 1784289599999
 },
 "XRPUSDT:5m": {
-"call": "SELL",
-"p": 0.3816,
+"call": "STRONG SELL",
+"p": 0.2162,
 "price": 1.0847,
-"t": 1784288099999,
+"t": 1784288399999,
 "rel": 1.0,
 "reln": 2,
 "rsrc": "live"
@@ -152,11 +152,11 @@
 },
 "TRXUSDT:5m": {
 "call": "STRONG SELL",
-"p": 0.1379,
-"price": 0.3228,
-"t": 1784288099999,
-"rel": 0.75,
-"reln": 4,
+"p": 0.1537,
+"price": 0.3229,
+"t": 1784288399999,
+"rel": 0.8,
+"reln": 5,
 "rsrc": "live"
 },
 "TRXUSDT:30m": {
@@ -175,10 +175,10 @@
 "t": 1784289599999
 },
 "AVAXUSDT:5m": {
-"call": "SELL",
-"p": 0.3797,
-"price": 6.486,
-"t": 1784288099999,
+"call": "STRONG SELL",
+"p": 0.237,
+"price": 6.493,
+"t": 1784288399999,
 "rel": 0.75,
 "reln": 4,
 "rsrc": "live"
@@ -200,11 +200,11 @@
 },
 "LINKUSDT:5m": {
 "call": "SELL",
-"p": 0.3749,
-"price": 8.185,
-"t": 1784288099999,
+"p": 0.3971,
+"price": 8.194,
+"t": 1784288399999,
 "rel": 1.0,
-"reln": 2,
+"reln": 3,
 "rsrc": "live"
 },
 "LINKUSDT:30m": {
@@ -1404,7 +1404,7 @@
 "p": 0.3816,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "XRPUSDT:30m",
@@ -1458,7 +1458,7 @@
 "p": 0.1379,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": false
 },
 {
 "key": "TRXUSDT:30m",
@@ -1476,7 +1476,7 @@
 "p": 0.3797,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": false
 },
 {
 "key": "AVAXUSDT:30m",
@@ -1494,7 +1494,7 @@
 "p": 0.3749,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": false
 },
 {
 "key": "LINKUSDT:30m",
@@ -1502,6 +1502,42 @@
 "price": 8.185,
 "p": 0.3277,
 "call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "XRPUSDT:5m",
+"t": 1784288399999,
+"price": 1.0847,
+"p": 0.2162,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "TRXUSDT:5m",
+"t": 1784288399999,
+"price": 0.3229,
+"p": 0.1537,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "AVAXUSDT:5m",
+"t": 1784288399999,
+"price": 6.493,
+"p": 0.237,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "LINKUSDT:5m",
+"t": 1784288399999,
+"price": 8.194,
+"p": 0.3971,
+"call": "SELL",
 "dir": -1,
 "result": null
 }
