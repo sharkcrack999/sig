@@ -2,9 +2,9 @@
 "latest": {
 "BTCUSDT:5m": {
 "call": "STRONG SELL",
-"p": 0.1996,
-"price": 63133.97,
-"t": 1784286599999
+"p": 0.1546,
+"price": 63112.32,
+"t": 1784286899999
 },
 "BTCUSDT:30m": {
 "call": "SELL",
@@ -13,10 +13,10 @@
 "t": 1784287799999
 },
 "ETHUSDT:5m": {
-"call": "STRONG SELL",
-"p": 0.2514,
-"price": 1835.73,
-"t": 1784286599999
+"call": "NEUTRAL",
+"p": 0.4389,
+"price": 1835.22,
+"t": 1784286899999
 },
 "ETHUSDT:30m": {
 "call": "STRONG SELL",
@@ -25,10 +25,10 @@
 "t": 1784287799999
 },
 "SOLUSDT:5m": {
-"call": "STRONG SELL",
-"p": 0.3095,
+"call": "NEUTRAL",
+"p": 0.4527,
 "price": 74.74,
-"t": 1784286599999
+"t": 1784286899999
 },
 "SOLUSDT:30m": {
 "call": "STRONG SELL",
@@ -37,10 +37,10 @@
 "t": 1784287799999
 },
 "BNBUSDT:5m": {
-"call": "SELL",
-"p": 0.3621,
-"price": 563.87,
-"t": 1784286599999
+"call": "STRONG SELL",
+"p": 0.3226,
+"price": 563.66,
+"t": 1784286899999
 },
 "BNBUSDT:30m": {
 "call": "SELL",
@@ -56,9 +56,9 @@
 },
 "XRPUSDT:5m": {
 "call": "STRONG SELL",
-"p": 0.336,
-"price": 1.0857,
-"t": 1784286599999
+"p": 0.2717,
+"price": 1.0851,
+"t": 1784286899999
 },
 "XRPUSDT:30m": {
 "call": "STRONG SELL",
@@ -74,9 +74,9 @@
 },
 "DOGEUSDT:5m": {
 "call": "STRONG SELL",
-"p": 0.2952,
-"price": 0.07193,
-"t": 1784286599999
+"p": 0.3252,
+"price": 0.07191,
+"t": 1784286899999
 },
 "DOGEUSDT:30m": {
 "call": "STRONG SELL",
@@ -92,9 +92,9 @@
 },
 "ADAUSDT:5m": {
 "call": "STRONG SELL",
-"p": 0.1522,
+"p": 0.249,
 "price": 0.1607,
-"t": 1784286599999
+"t": 1784286899999
 },
 "ADAUSDT:30m": {
 "call": "STRONG SELL",
@@ -128,9 +128,9 @@
 },
 "AVAXUSDT:5m": {
 "call": "STRONG SELL",
-"p": 0.2849,
-"price": 6.488,
-"t": 1784286599999
+"p": 0.2715,
+"price": 6.492,
+"t": 1784286899999
 },
 "AVAXUSDT:30m": {
 "call": "SELL",
@@ -146,9 +146,9 @@
 },
 "LINKUSDT:5m": {
 "call": "SELL",
-"p": 0.3807,
-"price": 8.189,
-"t": 1784286599999
+"p": 0.3476,
+"price": 8.179,
+"t": 1784286899999
 },
 "LINKUSDT:30m": {
 "call": "STRONG SELL",
@@ -552,7 +552,7 @@
 "p": 0.1996,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "BTCUSDT:30m",
@@ -579,7 +579,7 @@
 "p": 0.2514,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "ETHUSDT:30m",
@@ -606,7 +606,7 @@
 "p": 0.3095,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "SOLUSDT:30m",
@@ -633,7 +633,7 @@
 "p": 0.3621,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "BNBUSDT:30m",
@@ -660,7 +660,7 @@
 "p": 0.336,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "XRPUSDT:30m",
@@ -687,7 +687,7 @@
 "p": 0.2952,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "DOGEUSDT:30m",
@@ -714,7 +714,7 @@
 "p": 0.1522,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "ADAUSDT:30m",
@@ -768,7 +768,7 @@
 "p": 0.2849,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": false
 },
 {
 "key": "AVAXUSDT:30m",
@@ -795,7 +795,7 @@
 "p": 0.3807,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "LINKUSDT:30m",
@@ -1001,6 +1001,87 @@
 "price": 8.183,
 "p": 0.1504,
 "call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "BTCUSDT:5m",
+"t": 1784286899999,
+"price": 63112.32,
+"p": 0.1546,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "ETHUSDT:5m",
+"t": 1784286899999,
+"price": 1835.22,
+"p": 0.4389,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "SOLUSDT:5m",
+"t": 1784286899999,
+"price": 74.74,
+"p": 0.4527,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "BNBUSDT:5m",
+"t": 1784286899999,
+"price": 563.66,
+"p": 0.3226,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "XRPUSDT:5m",
+"t": 1784286899999,
+"price": 1.0851,
+"p": 0.2717,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "DOGEUSDT:5m",
+"t": 1784286899999,
+"price": 0.07191,
+"p": 0.3252,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "ADAUSDT:5m",
+"t": 1784286899999,
+"price": 0.1607,
+"p": 0.249,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "AVAXUSDT:5m",
+"t": 1784286899999,
+"price": 6.492,
+"p": 0.2715,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "LINKUSDT:5m",
+"t": 1784286899999,
+"price": 8.179,
+"p": 0.3476,
+"call": "SELL",
 "dir": -1,
 "result": null
 }
