@@ -264,10 +264,3 @@ function render(d){
     if(isFinite(g))net+=g;
   }
   const pend=(d.history||[]).filter(e=>e.result===null&&e.dir!==0&&
-    (SEL==="ALL"||short(e.key.split(":")[0])===SEL)).length;
-  const pc=(h,n)=>n?((100*h/n).toFixed(1)+"%"):"—";
-  const netAfter=net-FEE*sc.length;
-  document.getElementById("statbar").innerHTML=`
-    <div class="stat"><div class="k">Signals scored</div>
-      <div class="v mono">${sc.length} <small>${pend} pending</small></div></div>
-    <div class="stat"><div
