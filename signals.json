@@ -1,1 +1,74 @@
-{"latest": {}, "history": []}
+{
+"latest": {
+"BTCUSDT:5m": {
+"call": "NEUTRAL",
+"p": 0.5224,
+"price": 63078.18,
+"t": 1784292299999,
+"rel": 0.461,
+"reln": 232
+},
+"ETHUSDT:5m": {
+"call": "NEUTRAL",
+"p": 0.5131,
+"price": 1829.33,
+"t": 1784292299999,
+"rel": 0.498,
+"reln": 253
+},
+"SOLUSDT:5m": {
+"call": "NEUTRAL",
+"p": 0.4644,
+"price": 74.41,
+"t": 1784292299999,
+"rel": 0.523,
+"reln": 197
+},
+"BNBUSDT:5m": {
+"call": "NEUTRAL",
+"p": 0.5012,
+"price": 561.98,
+"t": 1784292299999,
+"rel": 0.516,
+"reln": 254
+}
+},
+"history": [
+{
+"key": "BTCUSDT:5m",
+"t": 1784292299999,
+"price": 63078.18,
+"p": 0.5224,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "ETHUSDT:5m",
+"t": 1784292299999,
+"price": 1829.33,
+"p": 0.5131,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "SOLUSDT:5m",
+"t": 1784292299999,
+"price": 74.41,
+"p": 0.4644,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "BNBUSDT:5m",
+"t": 1784292299999,
+"price": 561.98,
+"p": 0.5012,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+}
+]
+}
