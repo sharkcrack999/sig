@@ -1,14 +1,15 @@
 """Always-on crypto signal job with back-learning - GitHub Actions (free).
 
-Trains XGBoost per coin x timeframe, predicts newest closed candle, alerts
-Telegram on STRONG calls. Back-learn: permanent log.csv, walk-forward
-backtest, pooled fact-based reliability (all scored calls counted once),
-weekly report card, auto-mute of weak signal types, and adaptive
-selectivity: signal types with weak records must clear a higher conviction
-bar before alerting. Nothing trades.
+Trains XGBoost per coin x timeframe with Platt-calibrated probabilities,
+predicts newest closed candle, alerts Telegram on STRONG calls. Regime
+filter withholds fast-timeframe alerts in choppy markets. Back-learn:
+permanent log.csv, calibrated walk-forward backtest, pooled fact-based
+reliability, weekly report card, auto-mute and adaptive selectivity for
+weak signal types. Nothing trades.
 """
 import csv
 import json
+import math
 import os
 import sys
 from datetime import datetime, timezone
@@ -16,6 +17,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 import requests
+from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 
 DATA = "https://data-api.binance.vision/api/v3"
@@ -32,9 +34,10 @@ BT_FILE = "backtest.json"
 STRONG_HI, HI, LO, STRONG_LO = 0.66, 0.58, 0.42, 0.34
 MUTE_MIN_CALLS = 20
 MUTE_BELOW = 0.48
-SELECTIVE_N = 30       # if a signal type has >= this many scored calls...
-SELECTIVE_BELOW = 0.50 # ...and reliability below this...
-SELECTIVE_EXTRA = 0.04 # ...require this much extra conviction to alert
+SELECTIVE_N = 30
+SELECTIVE_BELOW = 0.50
+SELECTIVE_EXTRA = 0.04
+CHOP_TREND = 0.0025      # |1h ema12/ema48 - 1| below this = choppy market
 BT_PER_RUN = 6
 BT_REFRESH_DAYS = 30
 
@@ -68,6 +71,18 @@ def depth_imbalance(sym):
         return bid / (bid + ask)
     except Exception:
         return None
+
+
+def regime_choppy(sym):
+    """True when the 1h trend is flat (dead chop) for this coin."""
+    try:
+        k = klines(sym, "1h", 200)
+        c = pd.Series([float(x[4]) for x in k])
+        e12 = c.ewm(span=12).mean().iloc[-1]
+        e48 = c.ewm(span=48).mean().iloc[-1]
+        return abs(e12 / e48 - 1) < CHOP_TREND
+    except Exception:
+        return False
 
 
 def build(k):
@@ -115,7 +130,38 @@ def label(p):
     return "NEUTRAL", 0, False
 
 
+def logodds(p):
+    p = min(max(p, 1e-6), 1 - 1e-6)
+    return math.log(p / (1 - p))
+
+
+def train_calibrated(dd, feats):
+    """Train on the first 85%, fit a Platt corrector on the held-out 15%.
+    Returns (model, calibrator or None)."""
+    y = dd["target"].astype(int)
+    n = len(dd)
+    cut = int(n * 0.85)
+    model = make_model()
+    if n - cut < 40:
+        model.fit(dd[feats], y)
+        return model, None
+    model.fit(dd[feats].iloc[:cut], y.iloc[:cut])
+    p_hold = model.predict_proba(dd[feats].iloc[cut:])[:, 1]
+    lo = np.array([[logodds(float(p))] for p in p_hold])
+    cal = LogisticRegression()
+    cal.fit(lo, y.iloc[cut:])
+    return model, cal
+
+
+def cal_p(model, cal, X):
+    p = float(model.predict_proba(X)[:, 1][0])
+    if cal is None:
+        return p
+    return float(cal.predict_proba([[logodds(p)]])[:, 1][0])
+
+
 def backtest_key(d, feats):
+    """Walk-forward replay with the same calibration as live."""
     dd = d[d["target"].notna()].reset_index(drop=True)
     n = len(dd)
     if n < 240:
@@ -126,9 +172,13 @@ def backtest_key(d, feats):
     i = start
     while i < n:
         j = min(i + step, n)
-        m = make_model()
-        m.fit(dd[feats].iloc[:i], dd["target"].iloc[:i].astype(int))
-        probs = m.predict_proba(dd[feats].iloc[i:j])[:, 1]
+        model, cal = train_calibrated(dd.iloc[:i], feats)
+        p_raw = model.predict_proba(dd[feats].iloc[i:j])[:, 1]
+        if cal is not None:
+            los = np.array([[logodds(float(p))] for p in p_raw])
+            probs = cal.predict_proba(los)[:, 1]
+        else:
+            probs = p_raw
         acts = dd["target"].iloc[i:j].values
         for p, a in zip(probs, acts):
             tot += 1
@@ -183,8 +233,7 @@ def live_record(log, key, strong_only=True, window=50):
 
 
 def reliability(log, bt, key):
-    """All scored calls pooled equally, backtest and live alike.
-    rate = total hits / total calls."""
+    """All scored calls pooled equally, backtest and live alike."""
     lr, ln = live_record(log, key)
     b = bt.get(key)
     bh, bn = (b["strong"] if b else [0, 0])
@@ -239,6 +288,7 @@ def main():
     bt_budget = BT_PER_RUN
     feats = None
     for sym in COINS:
+        choppy = regime_choppy(sym)
         for iv, tfname in TFS:
             key = f"{sym}:{iv}"
             try:
@@ -261,8 +311,7 @@ def main():
                 train = d[d["target"].notna()]
                 if len(train) < MIN_ROWS.get(iv, 300):
                     continue
-                model = make_model()
-                model.fit(train[feats], train["target"].astype(int))
+                model, cal = train_calibrated(train, feats)
 
                 newest = d.iloc[-1]
                 candle = str(int(newest["ct"]))
@@ -270,8 +319,7 @@ def main():
                     continue
                 state[key] = candle
 
-                p = float(model.predict_proba(
-                    newest[feats].to_frame().T)[:, 1][0])
+                p = cal_p(model, cal, newest[feats].to_frame().T)
                 if iv == "5m":
                     di = depth_imbalance(sym)
                     if di is not None:
@@ -306,9 +354,13 @@ def main():
                     "reln": rn}
 
                 pxs = f"{px:,.2f}" if px >= 1 else f"{px:.5f}"
-                print(f"{key}: {call} p={p:.3f} @ ${pxs}")
+                print(f"{key}: {call} p={p:.3f} @ ${pxs}"
+                      + (" [chop]" if choppy else ""))
 
                 if strong:
+                    if choppy and iv in ("5m", "30m"):
+                        print(f"{key}: STRONG alert withheld, choppy regime")
+                        continue
                     weak = (rn >= SELECTIVE_N and rate is not None
                             and rate < SELECTIVE_BELOW)
                     extra = SELECTIVE_EXTRA if weak else 0.0
@@ -321,9 +373,7 @@ def main():
                               f"({rate*100:.0f}% of {rn})")
                     elif not confident:
                         print(f"{key}: STRONG alert skipped, weak record "
-                              f"({rate*100:.0f}% of {rn}) needs "
-                              f"p beyond {STRONG_HI+extra:.2f}/"
-                              f"{STRONG_LO-extra:.2f}")
+                              f"({rate*100:.0f}% of {rn})")
                     else:
                         rec = (f"\n{health_dot(rate)} Reliability: "
                                f"{rate*100:.0f}% of {rn} calls"
