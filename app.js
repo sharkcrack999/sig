@@ -1,6 +1,7 @@
 const RAW="https://raw.githubusercontent.com/sharkcrack999/sig/main/signals.json";
 const LOGRAW="https://raw.githubusercontent.com/sharkcrack999/sig/main/log.csv";
-let LOG=[],PNL={};
+const BINANCE="https://data-api.binance.vision/api/v3/ticker/price";
+let LOG=[],PNL={},LIVE={};
 const FEE=0.0015;
 const TFS=["5m","30m","1h","1d","1w"];
 const TFN={"5m":"5 MIN","30m":"30 MIN","1h":"1 HOUR","1d":"1 DAY","1w":"1 WEEK"};
@@ -15,6 +16,10 @@ const fp=p=>"$"+(p>=1?p.toLocaleString(undefined,{maximumFractionDigits:2}):p.to
 const fg=x=>(x>=0?"+":"")+(x*100).toFixed(2)+"%";
 const ago=t=>{const m=Math.max(0,(Date.now()-t)/60000);
   return m<1?"now":m<60?Math.round(m)+"m":Math.round(m/60)+"h"};
+const mmss=ms=>{if(ms<=0)return "0:00";
+  if(ms>=86400000)return Math.floor(ms/86400000)+"d "+Math.floor(ms%86400000/3600000)+"h";
+  if(ms>=3600000)return Math.floor(ms/3600000)+"h "+Math.floor(ms%3600000/60000)+"m";
+  return Math.floor(ms/60000)+":"+String(Math.floor(ms%60000/1000)).padStart(2,"0")};
 function cdText(tf){
   const ms=TFMS[tf],now=Date.now();
   let next;
@@ -23,11 +28,7 @@ function cdText(tf){
     const days=(8-dow)%7||7;
     next=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+days);
   }else{next=Math.ceil(now/ms)*ms;}
-  const left=next-now;
-  if(left>=86400000){return Math.floor(left/86400000)+"d "+Math.floor(left%86400000/3600000)+"h";}
-  if(left>=3600000){return Math.floor(left/3600000)+"h "+Math.floor(left%3600000/60000)+"m";}
-  const m=Math.floor(left/60000),s=Math.floor(left%60000/1000);
-  return m+":"+String(s).padStart(2,"0");
+  return mmss(next-now);
 }
 function tickTimers(){
   for(const tf of TFS){
@@ -51,6 +52,7 @@ function relHTML(key){
   const c=v.r>=0.55?"r-g":v.r>=0.45?"r-y":"r-r";
   return '<div class="rel '+c+'">rel '+(v.r*100).toFixed(0)+'% \u00B7 '+v.n+'</div>';
 }
+function livePx(sym){return LIVE[sym]||null;}
 function pick(c){SEL=c;location.hash=c==="ALL"?"":c.toLowerCase();
   if(DATA)render(DATA);}
 function pickTF(t){TFSEL=t;if(DATA)render(DATA);}
@@ -59,7 +61,7 @@ function render(d){
   const coins={};
   for(const [k,v] of Object.entries(d.latest||{})){
     const [sym,tf]=k.split(":");
-    (coins[short(sym)]=coins[short(sym)]||{})[tf]={...v,key:k};
+    (coins[short(sym)]=coins[short(sym)]||{})[tf]={...v,key:k,sym:sym};
   }
   const names=[...CO.filter(c=>coins[c]),
                ...Object.keys(coins).filter(c=>!CO.includes(c))];
@@ -77,6 +79,7 @@ function render(d){
     let rows="";
     for(const n of names){
       const tfs=coins[n],any=Object.values(tfs)[0];
+      const px=livePx(any.sym)||any.price;
       let cells="";
       for(const t of TFS){
         const v=tfs[t];
@@ -85,7 +88,7 @@ function render(d){
           '</div><div class="p mono">'+(v.p*100).toFixed(0)+'%</div>'+relHTML(v.key)+'</td>';
       }
       rows+='<tr onclick="pick(\''+n+'\')"><td class="sym"><b>'+n+
-        '</b><span class="px mono">'+fp(any.price)+'</span></td>'+cells+'</tr>';
+        '</b><span class="px mono">'+fp(px)+'</span></td>'+cells+'</tr>';
     }
     document.getElementById("board").innerHTML=breadth+
       '<table class="mx"><thead><tr><th>Market</th>'+
@@ -97,23 +100,29 @@ function render(d){
       '<div class="empty">No data for '+SEL+' yet.</div>';}
     else{
       const any=Object.values(tfs)[0];
+      const px=livePx(any.sym)||any.price;
       let cards="";
       for(const t of TFS){
         if(!tfs[t])continue;
         const v=tfs[t],rel=relFor(v.key);
         const relLine=rel?('Reliability <b class="'+(rel.r>=0.55?"c-buy":rel.r>=0.45?"":"c-sell")+
           '">'+(rel.r*100).toFixed(0)+'%</b> of '+rel.n+' calls'):'Reliability <b>collecting\u2026</b>';
+        const lp=livePx(v.sym);
+        const liveLine=(lp&&v.call!=="NEUTRAL")?
+          ('Live: <b class="'+((v.call.includes("BUY")?1:-1)*(lp/v.price-1)>=0?"g-pos":"g-neg")+'">'+
+           fg((v.call.includes("BUY")?1:-1)*(lp/v.price-1))+'</b> so far'):"";
         cards+='<div class="card"><div class="tf"><span>'+TFN[t]+
           '</span><span class="mono">closes <i style="font-style:normal" id="cdc-'+t+'"></i></span></div>'+
           '<div class="gauge"><i style="left:'+(v.p*100).toFixed(1)+'%"></i></div>'+
           '<div class="call '+cls(v.call)+'">'+v.call+'</div>'+
           '<div class="meta mono">P(up) <b>'+(v.p*100).toFixed(1)+'%</b> \u00B7 '+fp(v.price)+'</div>'+
-          '<div class="meta mono">'+relLine+'</div></div>';
+          '<div class="meta mono">'+relLine+'</div>'+
+          (liveLine?'<div class="meta mono">'+liveLine+'</div>':"")+'</div>';
       }
       document.getElementById("board").innerHTML=
         '<div class="coinhead"><b>'+SEL+'</b><span class="mono" style="color:var(--faint);font-size:12px">/ USDT</span>'+
         '<span class="back" onclick="pick(\'ALL\')">\u2190 ALL</span>'+
-        '<span class="px mono">'+fp(any.price)+'</span></div><div class="cards">'+cards+'</div>';
+        '<span class="px mono">'+fp(px)+'</span></div><div class="cards">'+cards+'</div>';
     }
   }
   const sc=LOG.filter(r=>(r.result==="hit"||r.result==="miss")&&
@@ -155,13 +164,21 @@ function render(d){
   for(const e of hist){
     const [sym,tf]=e.key.split(":");
     const rowCls=e.result===true?"rh":e.result===false?"rm":"";
-    const pill=e.result===null?'<span class="pill pend">\u00B7\u00B7\u00B7</span>':
-      e.result==="na"?"":
-      e.result?'<span class="pill ok">\u2713</span>':'<span class="pill bad">\u2715</span>';
-    const g=PNL[e.key+"|"+e.t];
-    const gain=(e.result===null||e.result==="na")?'<span class="mono" style="color:var(--faint)">\u00B7\u00B7\u00B7</span>':
-      g===undefined?"\u2014":
-      '<span class="mono '+(g>=0?"g-pos":"g-neg")+'">'+fg(g)+'</span>';
+    const lp=livePx(sym);
+    let pill,gain;
+    if(e.result===null){
+      const locks=e.t+TFMS[tf]-Date.now();
+      pill='<span class="pill pend">'+(locks>0?("locks "+mmss(locks)):"scoring\u2026")+'</span>';
+      if(e.dir!==0&&lp){
+        const g=e.dir*(lp/e.price-1);
+        gain='<span class="mono '+(g>=0?"g-pos":"g-neg")+'" style="opacity:.75">'+fg(g)+' live</span>';
+      }else{gain='<span class="mono" style="color:var(--faint)">\u00B7\u00B7\u00B7</span>';}
+    }else if(e.result==="na"){pill="";gain="";}
+    else{
+      pill=e.result?'<span class="pill ok">\u2713</span>':'<span class="pill bad">\u2715</span>';
+      const g=PNL[e.key+"|"+e.t];
+      gain=g===undefined?"\u2014":'<span class="mono '+(g>=0?"g-pos":"g-neg")+'">'+fg(g)+'</span>';
+    }
     hrows+='<tr class="'+rowCls+'" onclick="pick(\''+short(sym)+'\')"><td>'+short(sym)+
       ' <span class="mono" style="color:var(--faint)">'+tf+'</span></td>'+
       '<td class="mono">'+ago(e.t)+'</td>'+
@@ -171,7 +188,14 @@ function render(d){
   document.getElementById("hist").innerHTML=hrows||
     '<tr><td class="empty" colspan="5">No calls yet</td></tr>';
   const ts=Math.max(0,...Object.values(d.latest||{}).map(v=>v.t));
-  document.getElementById("upd").textContent=ts?("updated "+ago(ts)+" ago"):"no data";
+  document.getElementById("upd").textContent=ts?("engine "+ago(ts)+" ago \u00B7 prices live"):"no data";
+}
+async function pollPrices(){
+  try{
+    const arr=await fetch(BINANCE).then(r=>r.json());
+    for(const x of arr){LIVE[x.symbol]=parseFloat(x.price);}
+    if(DATA)render(DATA);
+  }catch(e){}
 }
 async function load(){
   try{
@@ -189,5 +213,6 @@ async function load(){
     document.getElementById("upd").textContent="waiting for data";
   }
 }
-load();setInterval(load,60000);
+load();setInterval(load,30000);
 setInterval(tickTimers,500);
+pollPrices();setInterval(pollPrices,15000);
