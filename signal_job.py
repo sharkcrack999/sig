@@ -1,9 +1,10 @@
 """Always-on crypto signal job with back-learning - GitHub Actions (free).
 
 Trains XGBoost per coin x timeframe, predicts newest closed candle, alerts
-Telegram on STRONG calls with color emoji. Back-learn layer: permanent
-log.csv archive, trailing track record in every alert, weekly Monday report
-card, auto-mute of signal types whose STRONG calls prove bad. Nothing trades.
+Telegram on STRONG calls with color emoji. Back-learn: permanent log.csv,
+walk-forward backtest priors (backtest.json), blended reliability shown in
+alerts and dashboard, weekly report card, auto-mute of weak signal types
+from day one using backtest evidence. Nothing trades.
 """
 import csv
 import json
@@ -25,10 +26,13 @@ MIN_ROWS = {"5m": 300, "30m": 300, "1h": 300, "1d": 300, "1w": 120}
 STATE_FILE = "state.json"
 SIGNALS_FILE = "signals.json"
 LOG_FILE = "log.csv"
+BT_FILE = "backtest.json"
 
 STRONG_HI, HI, LO, STRONG_LO = 0.66, 0.58, 0.42, 0.34
-MUTE_MIN_CALLS = 30
+MUTE_MIN_CALLS = 20
 MUTE_BELOW = 0.48
+BT_PER_RUN = 6            # backtest at most this many signal types per run
+BT_REFRESH_DAYS = 30      # re-run each backtest monthly
 
 
 def emoji_for(call):
@@ -92,12 +96,51 @@ def build(k):
     return d.dropna(subset=[col for col in d.columns if col != "target"])
 
 
+def make_model():
+    return XGBClassifier(
+        n_estimators=150, max_depth=4, learning_rate=0.07,
+        subsample=0.8, colsample_bytree=0.8,
+        eval_metric="logloss", n_jobs=2)
+
+
 def label(p):
     if p >= STRONG_HI: return "STRONG BUY", 1, True
     if p >= HI: return "BUY", 1, False
     if p <= STRONG_LO: return "STRONG SELL", -1, True
     if p <= LO: return "SELL", -1, False
     return "NEUTRAL", 0, False
+
+
+def backtest_key(d, feats):
+    """Walk-forward replay: train on the past, predict unseen candles,
+    score the same BUY/SELL calls the live system would have made."""
+    dd = d[d["target"].notna()].reset_index(drop=True)
+    n = len(dd)
+    if n < 240:
+        return None
+    start = max(int(n * 0.5), 120)
+    step = 150
+    allh = alln = sth = stn = okdir = tot = 0
+    i = start
+    while i < n:
+        j = min(i + step, n)
+        m = make_model()
+        m.fit(dd[feats].iloc[:i], dd["target"].iloc[:i].astype(int))
+        probs = m.predict_proba(dd[feats].iloc[i:j])[:, 1]
+        acts = dd["target"].iloc[i:j].values
+        for p, a in zip(probs, acts):
+            tot += 1
+            okdir += 1 if ((p > 0.5) == (a == 1)) else 0
+            call, dirn, strong = label(float(p))
+            if dirn != 0:
+                hit = (dirn == 1) == (a == 1)
+                alln += 1; allh += 1 if hit else 0
+                if strong:
+                    stn += 1; sth += 1 if hit else 0
+        i = j
+    return {"all": [allh, alln], "strong": [sth, stn],
+            "acc": round(okdir / max(tot, 1), 4),
+            "at": int(datetime.now(timezone.utc).timestamp() * 1000)}
 
 
 def tg(text):
@@ -127,7 +170,7 @@ def load_log():
                                      "p", "price", "next_price", "result"])
 
 
-def track_record(log, key, strong_only=True, window=30):
+def live_record(log, key, strong_only=True, window=50):
     x = log[(log["key"] == key) & (log["result"].isin(["hit", "miss"]))]
     if strong_only:
         x = x[x["strong"] == 1]
@@ -135,6 +178,24 @@ def track_record(log, key, strong_only=True, window=30):
     if not len(x):
         return None, 0
     return (x["result"] == "hit").mean(), len(x)
+
+
+def reliability(log, bt, key):
+    """Blend live scored calls with backtest priors.
+    Live only once >=10 live calls; backtest only if no live; mix between
+    (live weighted double). Returns (rate, n_effective, source)."""
+    lr, ln = live_record(log, key)
+    b = bt.get(key)
+    bh, bn = (b["strong"] if b else [0, 0])
+    if ln >= 10 or (ln > 0 and bn == 0):
+        return lr, ln, "live"
+    if ln == 0 and bn > 0:
+        return bh / bn, bn, "bt"
+    if ln > 0 and bn > 0:
+        lh = lr * ln
+        rate = (lh + 0.5 * bh) / (ln + 0.5 * bn)
+        return rate, int(ln + 0.5 * bn), "mix"
+    return None, 0, None
 
 
 def weekly_report(log, state):
@@ -171,8 +232,14 @@ def main():
         sigdata = json.load(open(SIGNALS_FILE))
     except Exception:
         sigdata = {"latest": {}, "history": []}
+    try:
+        bt = json.load(open(BT_FILE))
+    except Exception:
+        bt = {}
     log = load_log()
 
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    bt_budget = BT_PER_RUN
     feats = None
     for sym in COINS:
         for iv, tfname in TFS:
@@ -182,13 +249,23 @@ def main():
                 if feats is None:
                     feats = [c for c in d.columns
                              if c not in ("target", "close", "ct")]
+
+                # back-learn: walk-forward backtest prior, refreshed monthly
+                b = bt.get(key)
+                if bt_budget > 0 and (
+                        not b or now_ms - b["at"] > BT_REFRESH_DAYS * 86400000):
+                    res = backtest_key(d, feats)
+                    if res:
+                        bt[key] = res
+                        bt_budget -= 1
+                        print(f"{key}: backtest strong "
+                              f"{res['strong'][0]}/{res['strong'][1]}, "
+                              f"acc {res['acc']:.3f}")
+
                 train = d[d["target"].notna()]
                 if len(train) < MIN_ROWS.get(iv, 300):
                     continue
-                model = XGBClassifier(
-                    n_estimators=150, max_depth=4, learning_rate=0.07,
-                    subsample=0.8, colsample_bytree=0.8,
-                    eval_metric="logloss", n_jobs=2)
+                model = make_model()
                 model.fit(train[feats], train["target"].astype(int))
 
                 newest = d.iloc[-1]
@@ -219,28 +296,34 @@ def main():
                                     e["p"], e["price"], px, res])
                         break
 
+                rate, rn, rsrc = reliability(log, bt, key)
+
                 sigdata["history"].append(
                     {"key": key, "t": int(newest["ct"]), "price": px,
                      "p": round(p, 4), "call": call, "dir": direction,
                      "result": None})
-                sigdata["history"] = sigdata["history"][-400:]
-                sigdata["latest"][key] = {"call": call, "p": round(p, 4),
-                                          "price": px, "t": int(newest["ct"])}
+                sigdata["history"] = sigdata["history"][-600:]
+                sigdata["latest"][key] = {
+                    "call": call, "p": round(p, 4), "price": px,
+                    "t": int(newest["ct"]),
+                    "rel": round(rate, 3) if rate is not None else None,
+                    "reln": rn, "rsrc": rsrc}
 
                 pxs = f"{px:,.2f}" if px >= 1 else f"{px:.5f}"
                 print(f"{key}: {call} p={p:.3f} @ ${pxs}")
 
                 if strong:
-                    hr, n = track_record(log, key)
-                    muted = (n >= MUTE_MIN_CALLS and hr is not None
-                             and hr < MUTE_BELOW)
+                    muted = (rn >= MUTE_MIN_CALLS and rate is not None
+                             and rate < MUTE_BELOW)
                     if muted:
                         print(f"{key}: STRONG alert muted "
-                              f"(track record {hr*100:.0f}% of {n})")
+                              f"({rate*100:.0f}% of {rn}, {rsrc})")
                     else:
-                        rec = (f"\n{health_dot(hr)} Track record: "
-                               f"{hr*100:.0f}% of last {n} STRONG calls"
-                               if n >= 5 else "")
+                        src_tag = {"live": "live", "bt": "backtest",
+                                   "mix": "mixed"}.get(rsrc, "")
+                        rec = (f"\n{health_dot(rate)} Reliability: "
+                               f"{rate*100:.0f}% of {rn} ({src_tag})"
+                               if rate is not None and rn >= 5 else "")
                         tg(f"{emoji_for(call)} "
                            f"{sym.replace('USDT','')} {tfname}: {call}\n"
                            f"P(up) {p*100:.1f}% at ${pxs}{rec}")
@@ -252,6 +335,7 @@ def main():
 
     json.dump(state, open(STATE_FILE, "w"), indent=0)
     json.dump(sigdata, open(SIGNALS_FILE, "w"), indent=0)
+    json.dump(bt, open(BT_FILE, "w"), indent=0)
 
 
 if __name__ == "__main__":
