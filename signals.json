@@ -1,90 +1,90 @@
 {
 "latest": {
 "BTCUSDT:5m": {
-"call": "NEUTRAL",
-"p": 0.5194,
-"price": 77298.83,
-"t": 1787486699999,
-"rel": 0.525,
+"call": "BUY",
+"p": 0.5611,
+"price": 77216.0,
+"t": 1787489999999,
+"rel": 0.528,
 "reln": 326
 },
 "ETHUSDT:5m": {
-"call": "NEUTRAL",
-"p": 0.5109,
-"price": 2432.74,
-"t": 1787486699999,
+"call": "BUY",
+"p": 0.5848,
+"price": 2427.1,
+"t": 1787489999999,
 "rel": 0.475,
 "reln": 419
 },
 "SOLUSDT:5m": {
-"call": "STRONG SELL",
-"p": 0.3763,
-"price": 94.59,
-"t": 1787486699999,
+"call": "NEUTRAL",
+"p": 0.478,
+"price": 94.6,
+"t": 1787489999999,
 "rel": 0.554,
 "reln": 601
 },
 "BNBUSDT:5m": {
 "call": "NEUTRAL",
-"p": 0.4711,
-"price": 695.04,
-"t": 1787486699999,
+"p": 0.4782,
+"price": 694.22,
+"t": 1787489999999,
 "rel": 0.512,
 "reln": 383
 },
 "XRPUSDT:5m": {
-"call": "SELL",
-"p": 0.3923,
-"price": 1.4955,
-"t": 1787486699999,
+"call": "NEUTRAL",
+"p": 0.5171,
+"price": 1.4947,
+"t": 1787489999999,
 "rel": 0.542,
 "reln": 382
 },
 "DOGEUSDT:5m": {
-"call": "BUY",
-"p": 0.5641,
-"price": 0.09266,
-"t": 1787486699999,
+"call": "NEUTRAL",
+"p": 0.4827,
+"price": 0.09236,
+"t": 1787489999999,
 "rel": 0.512,
 "reln": 371
 },
 "ADAUSDT:5m": {
-"call": "NEUTRAL",
-"p": 0.4649,
-"price": 0.2249,
-"t": 1787486699999,
+"call": "SELL",
+"p": 0.4491,
+"price": 0.2247,
+"t": 1787489999999,
 "rel": 0.596,
 "reln": 656
 },
 "TRXUSDT:5m": {
-"call": "SELL",
-"p": 0.4001,
-"price": 0.3438,
-"t": 1787486699999,
-"rel": 0.664,
+"call": "STRONG SELL",
+"p": 0.3276,
+"price": 0.3437,
+"t": 1787489999999,
+"rel": 0.666,
 "reln": 646
 },
 "AVAXUSDT:5m": {
-"call": "NEUTRAL",
-"p": 0.4909,
-"price": 7.524,
-"t": 1787486699999,
+"call": "SELL",
+"p": 0.4404,
+"price": 7.541,
+"t": 1787489999999,
 "rel": 0.542,
 "reln": 439
 },
 "LINKUSDT:5m": {
-"call": "NEUTRAL",
-"p": 0.5049,
-"price": 11.409,
-"t": 1787486699999,
+"call": "SELL",
+"p": 0.4246,
+"price": 11.405,
+"t": 1787489999999,
 "rel": 0.499,
 "reln": 403
 },
 "BTCUSDT:30m": {
-"call": "NEUTRAL",
-"p": 0.4745,
-"price": 77298.83,
-"t": 1787488199999,
+"call": "SELL",
+"p": 0.4375,
+"price": 77215.99,
+"t": 1787489999999,
 "rel": 0.484,
 "reln": 316
 },
@@ -114,9 +114,9 @@
 },
 "ETHUSDT:30m": {
 "call": "NEUTRAL",
-"p": 0.5009,
-"price": 2432.73,
-"t": 1787488199999,
+"p": 0.5362,
+"price": 2427.1,
+"t": 1787489999999,
 "rel": 0.426,
 "reln": 188
 },
@@ -145,10 +145,10 @@
 "reln": 158
 },
 "SOLUSDT:30m": {
-"call": "SELL",
-"p": 0.4075,
-"price": 94.59,
-"t": 1787488199999,
+"call": "BUY",
+"p": 0.5591,
+"price": 94.58,
+"t": 1787489999999,
 "rel": 0.47,
 "reln": 466
 },
@@ -177,10 +177,10 @@
 "reln": 123
 },
 "BNBUSDT:30m": {
-"call": "NEUTRAL",
-"p": 0.5334,
-"price": 694.98,
-"t": 1787488199999,
+"call": "BUY",
+"p": 0.5553,
+"price": 694.22,
+"t": 1787489999999,
 "rel": 0.504,
 "reln": 427
 },
@@ -209,10 +209,10 @@
 "reln": 176
 },
 "XRPUSDT:30m": {
-"call": "NEUTRAL",
-"p": 0.5343,
-"price": 1.4955,
-"t": 1787488199999,
+"call": "BUY",
+"p": 0.5521,
+"price": 1.4947,
+"t": 1787489999999,
 "rel": 0.528,
 "reln": 532
 },
@@ -242,11 +242,11 @@
 },
 "DOGEUSDT:30m": {
 "call": "BUY",
-"p": 0.5845,
-"price": 0.09266,
-"t": 1787488199999,
-"rel": 0.52,
-"reln": 269
+"p": 0.5943,
+"price": 0.09236,
+"t": 1787489999999,
+"rel": 0.519,
+"reln": 270
 },
 "DOGEUSDT:1h": {
 "call": "BUY",
@@ -273,10 +273,10 @@
 "reln": 145
 },
 "ADAUSDT:30m": {
-"call": "BUY",
-"p": 0.5621,
-"price": 0.2249,
-"t": 1787488199999,
+"call": "NEUTRAL",
+"p": 0.5227,
+"price": 0.2247,
+"t": 1787489999999,
 "rel": 0.6,
 "reln": 482
 },
@@ -306,9 +306,9 @@
 },
 "TRXUSDT:30m": {
 "call": "SELL",
-"p": 0.4326,
-"price": 0.3438,
-"t": 1787488199999,
+"p": 0.4135,
+"price": 0.3437,
+"t": 1787489999999,
 "rel": 0.57,
 "reln": 526
 },
@@ -338,9 +338,9 @@
 },
 "AVAXUSDT:30m": {
 "call": "NEUTRAL",
-"p": 0.5351,
-"price": 7.524,
-"t": 1787488199999,
+"p": 0.5303,
+"price": 7.541,
+"t": 1787489999999,
 "rel": 0.504,
 "reln": 367
 },
@@ -370,11 +370,11 @@
 },
 "LINKUSDT:30m": {
 "call": "BUY",
-"p": 0.5642,
-"price": 11.409,
-"t": 1787488199999,
-"rel": 0.463,
-"reln": 378
+"p": 0.5827,
+"price": 11.405,
+"t": 1787489999999,
+"rel": 0.462,
+"reln": 379
 },
 "LINKUSDT:1h": {
 "call": "NEUTRAL",
@@ -402,186 +402,6 @@
 }
 },
 "history": [
-{
-"key": "XRPUSDT:5m",
-"t": 1787436299999,
-"price": 1.4552,
-"p": 0.4666,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "XRPUSDT:30m",
-"t": 1787437799999,
-"price": 1.4552,
-"p": 0.6113,
-"call": "BUY",
-"dir": 1,
-"result": true
-},
-{
-"key": "XRPUSDT:1h",
-"t": 1787439599999,
-"price": 1.455,
-"p": 0.6011,
-"call": "BUY",
-"dir": 1,
-"result": true
-},
-{
-"key": "DOGEUSDT:5m",
-"t": 1787436299999,
-"price": 0.09197,
-"p": 0.4649,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "DOGEUSDT:30m",
-"t": 1787437799999,
-"price": 0.09194,
-"p": 0.6315,
-"call": "STRONG BUY",
-"dir": 1,
-"result": true
-},
-{
-"key": "DOGEUSDT:1h",
-"t": 1787439599999,
-"price": 0.09189,
-"p": 0.6242,
-"call": "STRONG BUY",
-"dir": 1,
-"result": false
-},
-{
-"key": "ADAUSDT:5m",
-"t": 1787436299999,
-"price": 0.2243,
-"p": 0.4298,
-"call": "SELL",
-"dir": -1,
-"result": false
-},
-{
-"key": "ADAUSDT:30m",
-"t": 1787437799999,
-"price": 0.2243,
-"p": 0.5388,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "ADAUSDT:1h",
-"t": 1787439599999,
-"price": 0.2244,
-"p": 0.5546,
-"call": "BUY",
-"dir": 1,
-"result": true
-},
-{
-"key": "TRXUSDT:5m",
-"t": 1787436299999,
-"price": 0.3446,
-"p": 0.4054,
-"call": "SELL",
-"dir": -1,
-"result": false
-},
-{
-"key": "TRXUSDT:30m",
-"t": 1787437799999,
-"price": 0.3446,
-"p": 0.5024,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "TRXUSDT:1h",
-"t": 1787439599999,
-"price": 0.3447,
-"p": 0.5067,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "AVAXUSDT:5m",
-"t": 1787436299999,
-"price": 7.467,
-"p": 0.485,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "AVAXUSDT:30m",
-"t": 1787437799999,
-"price": 7.467,
-"p": 0.5285,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "AVAXUSDT:1h",
-"t": 1787439599999,
-"price": 7.467,
-"p": 0.5284,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "LINKUSDT:5m",
-"t": 1787436299999,
-"price": 11.531,
-"p": 0.5071,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "LINKUSDT:30m",
-"t": 1787437799999,
-"price": 11.531,
-"p": 0.5228,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
-{
-"key": "LINKUSDT:1h",
-"t": 1787439599999,
-"price": 11.532,
-"p": 0.5762,
-"call": "BUY",
-"dir": 1,
-"result": true
-},
-{
-"key": "BTCUSDT:5m",
-"t": 1787438099999,
-"price": 76997.99,
-"p": 0.2661,
-"call": "STRONG SELL",
-"dir": -1,
-"result": false
-},
-{
-"key": "BTCUSDT:30m",
-"t": 1787439599999,
-"price": 76996.0,
-"p": 0.5103,
-"call": "NEUTRAL",
-"dir": 0,
-"result": "na"
-},
 {
 "key": "ETHUSDT:5m",
 "t": 1787438099999,
@@ -5539,7 +5359,7 @@
 "p": 0.5194,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "BTCUSDT:30m",
@@ -5548,7 +5368,7 @@
 "p": 0.4745,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "BTCUSDT:1h",
@@ -5566,7 +5386,7 @@
 "p": 0.5109,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "ETHUSDT:30m",
@@ -5575,7 +5395,7 @@
 "p": 0.5009,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "ETHUSDT:1h",
@@ -5593,7 +5413,7 @@
 "p": 0.3763,
 "call": "STRONG SELL",
 "dir": -1,
-"result": null
+"result": false
 },
 {
 "key": "SOLUSDT:30m",
@@ -5602,7 +5422,7 @@
 "p": 0.4075,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "SOLUSDT:1h",
@@ -5620,7 +5440,7 @@
 "p": 0.4711,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "BNBUSDT:30m",
@@ -5629,7 +5449,7 @@
 "p": 0.5334,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "BNBUSDT:1h",
@@ -5647,7 +5467,7 @@
 "p": 0.3923,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "XRPUSDT:30m",
@@ -5656,7 +5476,7 @@
 "p": 0.5343,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "XRPUSDT:1h",
@@ -5674,7 +5494,7 @@
 "p": 0.5641,
 "call": "BUY",
 "dir": 1,
-"result": null
+"result": false
 },
 {
 "key": "DOGEUSDT:30m",
@@ -5683,7 +5503,7 @@
 "p": 0.5845,
 "call": "BUY",
 "dir": 1,
-"result": null
+"result": false
 },
 {
 "key": "DOGEUSDT:1h",
@@ -5701,7 +5521,7 @@
 "p": 0.4649,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "ADAUSDT:30m",
@@ -5710,7 +5530,7 @@
 "p": 0.5621,
 "call": "BUY",
 "dir": 1,
-"result": null
+"result": false
 },
 {
 "key": "ADAUSDT:1h",
@@ -5728,7 +5548,7 @@
 "p": 0.4001,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "TRXUSDT:30m",
@@ -5737,7 +5557,7 @@
 "p": 0.4326,
 "call": "SELL",
 "dir": -1,
-"result": null
+"result": true
 },
 {
 "key": "TRXUSDT:1h",
@@ -5755,7 +5575,7 @@
 "p": 0.4909,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "AVAXUSDT:30m",
@@ -5764,7 +5584,7 @@
 "p": 0.5351,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "AVAXUSDT:1h",
@@ -5782,7 +5602,7 @@
 "p": 0.5049,
 "call": "NEUTRAL",
 "dir": 0,
-"result": null
+"result": "na"
 },
 {
 "key": "LINKUSDT:30m",
@@ -5791,7 +5611,7 @@
 "p": 0.5642,
 "call": "BUY",
 "dir": 1,
-"result": null
+"result": false
 },
 {
 "key": "LINKUSDT:1h",
@@ -5800,6 +5620,186 @@
 "p": 0.5154,
 "call": "NEUTRAL",
 "dir": 0,
+"result": null
+},
+{
+"key": "BTCUSDT:5m",
+"t": 1787489999999,
+"price": 77216.0,
+"p": 0.5611,
+"call": "BUY",
+"dir": 1,
+"result": null
+},
+{
+"key": "BTCUSDT:30m",
+"t": 1787489999999,
+"price": 77215.99,
+"p": 0.4375,
+"call": "SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "ETHUSDT:5m",
+"t": 1787489999999,
+"price": 2427.1,
+"p": 0.5848,
+"call": "BUY",
+"dir": 1,
+"result": null
+},
+{
+"key": "ETHUSDT:30m",
+"t": 1787489999999,
+"price": 2427.1,
+"p": 0.5362,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "SOLUSDT:5m",
+"t": 1787489999999,
+"price": 94.6,
+"p": 0.478,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "SOLUSDT:30m",
+"t": 1787489999999,
+"price": 94.58,
+"p": 0.5591,
+"call": "BUY",
+"dir": 1,
+"result": null
+},
+{
+"key": "BNBUSDT:5m",
+"t": 1787489999999,
+"price": 694.22,
+"p": 0.4782,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "BNBUSDT:30m",
+"t": 1787489999999,
+"price": 694.22,
+"p": 0.5553,
+"call": "BUY",
+"dir": 1,
+"result": null
+},
+{
+"key": "XRPUSDT:5m",
+"t": 1787489999999,
+"price": 1.4947,
+"p": 0.5171,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "XRPUSDT:30m",
+"t": 1787489999999,
+"price": 1.4947,
+"p": 0.5521,
+"call": "BUY",
+"dir": 1,
+"result": null
+},
+{
+"key": "DOGEUSDT:5m",
+"t": 1787489999999,
+"price": 0.09236,
+"p": 0.4827,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "DOGEUSDT:30m",
+"t": 1787489999999,
+"price": 0.09236,
+"p": 0.5943,
+"call": "BUY",
+"dir": 1,
+"result": null
+},
+{
+"key": "ADAUSDT:5m",
+"t": 1787489999999,
+"price": 0.2247,
+"p": 0.4491,
+"call": "SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "ADAUSDT:30m",
+"t": 1787489999999,
+"price": 0.2247,
+"p": 0.5227,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "TRXUSDT:5m",
+"t": 1787489999999,
+"price": 0.3437,
+"p": 0.3276,
+"call": "STRONG SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "TRXUSDT:30m",
+"t": 1787489999999,
+"price": 0.3437,
+"p": 0.4135,
+"call": "SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "AVAXUSDT:5m",
+"t": 1787489999999,
+"price": 7.541,
+"p": 0.4404,
+"call": "SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "AVAXUSDT:30m",
+"t": 1787489999999,
+"price": 7.541,
+"p": 0.5303,
+"call": "NEUTRAL",
+"dir": 0,
+"result": null
+},
+{
+"key": "LINKUSDT:5m",
+"t": 1787489999999,
+"price": 11.405,
+"p": 0.4246,
+"call": "SELL",
+"dir": -1,
+"result": null
+},
+{
+"key": "LINKUSDT:30m",
+"t": 1787489999999,
+"price": 11.405,
+"p": 0.5827,
+"call": "BUY",
+"dir": 1,
 "result": null
 }
 ]
